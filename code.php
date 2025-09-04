@@ -28,6 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         handleNoticeUpload();
     } elseif ($action === 'upload_photo') {
         handlePhotoUpload();
+    } elseif ($action === 'submit_complaint') {  
+        handleComplaintSubmission();             
+    } elseif ($action === 'update_complaint_status') {  
+        updateComplaintStatus();                         
     } else {
         header("Location: website.php?error=Invalid action");
         exit();
@@ -425,7 +429,7 @@ function handlePhotoUpload() {
 
     // Validate file type (PNG only)
     $allowedTypes = ['image/png','image/jpeg'];
-    $allowedExtension = ['png','jpeg'];
+    $allowedExtension = ['png','jpeg','jpg'];
 
     $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
@@ -440,10 +444,10 @@ function handlePhotoUpload() {
         exit();
     }
 
-    // Use the file type from $_FILES but validate it
+    // Use the file type from $_FILES for validation
     $fileType = $file['type'];
     if (!in_array($fileType, $allowedTypes)) {
-        $_SESSION['error'] = "Only PNG files are allowed. Your file type: " . $fileType;
+        $_SESSION['error'] = "Only PNG or JPEG files are allowed. Your file type: " . $fileType;
         header("Location: website.php?tab=committee-gallery");
         exit();
     }
@@ -596,22 +600,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_photo_title' && isse
     $stmt = $conn->prepare("UPDATE gallery SET title = ? WHERE photo_id = ?");
     $stmt->bind_param("si", $newTitle, $photoId);
 */
-    
-//#########
-    /*if ($stmt->execute()) {
-        echo json_encode(['success' => true, 'message' => 'Title updated successfully']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Error updating title']);
-    }*/
-    /*
-    if ($stmt->execute()) {
-        $_SESSION['success'] = "Title updated successfully";
-    } else {
-        $_SESSION['error'] = "Error updating title";
-    }
-
-    exit();
-}*/
 
 // Handle AJAX request for gallery photos
 if (isset($_GET['action']) && $_GET['action'] === 'get_gallery_photos') {
@@ -647,13 +635,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_gallery_photos') {
         echo '<div class="photo-details">';
         
         if ($isCommittee) {
-            // Editable title for committee
             echo '<div class="editable-title" data-id="' . $photo['photo_id'] . '">';
             echo '<span class="title-text">' . htmlspecialchars($photo['title']) . '</span>';
             echo '<input type="text" class="title-edit" value="' . htmlspecialchars($photo['title']) . '" style="display:none;">';
             echo '</div>';
         } else {
-            // Static title for residents
             echo '<div class="photo-title">' . htmlspecialchars($photo['title']) . '</div>';
         }
         
@@ -680,219 +666,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_gallery_photos') {
 
 //###########---COMPLAINTS_START---##############
 // Handle complaint submission
-/*
 function handleComplaintSubmission() {
-    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'resident') {
-        $_SESSION['error'] = "Unauthorized access";
-        header("Location: website.php?tab=login");
-        exit();
-    }
 
-    $title = $_POST['title'] ?? '';
-    $description = $_POST['description'] ?? '';
-    $user_id = $_SESSION['user']['user_id'];
-
-    if (empty($title) || empty($description)) {
-        $_SESSION['error'] = "Title and description are required";
-        header("Location: website.php?tab=complaints");
-        exit();
-    }
-
-    $conn = getDBConnection();
-    //$status = 'pending';
-    $status_history = json_encode([['status' => 'pending', 'timestamp' => date('Y-m-d H:i:s')]]);
-    
-    $stmt = $conn->prepare("INSERT INTO complaints (title, description, uploaded_by, status_history) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $title, $description, $user_id, $status_history);
-    
-    if ($stmt->execute()) {
-        $_SESSION['success'] = "Complaint submitted successfully";
-    } else {
-        $_SESSION['error'] = "Error submitting complaint: " . $conn->error;
-    }
-    
-    header("Location: website.php?tab=complaints");
-    exit();
-}
-
-// Get complaints for resident
-function getResidentComplaints($user_id) {
-    $conn = getDBConnection();
-    $complaints = [];
-    
-    $stmt = $conn->prepare("SELECT complaint_id, title, description, status, created_at, status_history FROM complaints WHERE uploaded_by = ? ORDER BY created_at DESC");
-    $stmt->bind_param("s", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        $complaints[] = $row;
-    }
-    
-    return $complaints;
-}
-
-// Get all complaints for committee
-function getAllComplaints() {
-    $conn = getDBConnection();
-    $complaints = [];
-    
-    $query = "SELECT c.complaint_id, c.title, c.description, c.status, c.created_at, c.status_history, c.uploaded_by, u.name as user_name 
-              FROM complaints c 
-              JOIN users u ON c.uploaded_by = u.user_id 
-              ORDER BY c.created_at DESC";
-    
-    $result = $conn->query($query);
-    
-    while ($row = $result->fetch_assoc()) {
-        $complaints[] = $row;
-    }
-    
-    return $complaints;
-}
-
-// Update complaint status
-function updateComplaintStatus() {
-    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
-        $_SESSION['error'] = "Unauthorized access";
-        header("Location: website.php?tab=login");
-        exit();
-    }
-
-    $complaint_id = $_POST['complaint_id'] ?? '';
-    $new_status = $_POST['status'] ?? '';
-    
-    if (empty($complaint_id) || empty($new_status)) {
-        $_SESSION['error'] = "Invalid request";
-        header("Location: website.php?tab=committee-complaints");
-        exit();
-    }
-
-    $conn = getDBConnection();
-    
-    // Get current status history
-    $stmt = $conn->prepare("SELECT status_history FROM complaints WHERE complaint_id = ?");
-    $stmt->bind_param("i", $complaint_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $complaint = $result->fetch_assoc();
-    
-    $status_history = json_decode($complaint['status_history'], true);
-    $status_history[] = ['status' => $new_status, 'timestamp' => date('Y-m-d H:i:s')];
-    $new_status_history = json_encode($status_history);
-    
-    // Update complaint status and history
-    $updated_by = $_SESSION['user']['user_id'];
-    $stmt = $conn->prepare("UPDATE complaints SET status = ?, status_history = ?, updated_by = ? WHERE complaint_id = ?");
-    $stmt->bind_param("sssi", $new_status, $new_status_history, $updated_by, $complaint_id);
-    
-    if ($stmt->execute()) {
-        $_SESSION['success'] = "Complaint status updated successfully";
-    } else {
-        $_SESSION['error'] = "Error updating complaint status: " . $conn->error;
-    }
-    
-    header("Location: website.php?tab=committee-complaints");
-    exit();
-}
-
-// Handle complaint form submission
-//if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'submit_complaint') {
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'submit_complaint') {
-    handleComplaintSubmission();
-}
-
-// Handle complaint status update
-//if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_complaint_status') {
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_complaint_status') {
-    updateComplaintStatus();
-}
-
-// AJAX endpoint to get complaints for resident
-if (isset($_GET['action']) && $_GET['action'] === 'get_resident_complaints') {
-    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'resident') {
-        echo '<tr><td colspan="3">Unauthorized access</td></tr>';
-        exit();
-    }
-    
-    $complaints = getResidentComplaints($_SESSION['user']['user_id']);
-    renderResidentComplaintsTable($complaints);
-    exit();
-}
-
-// AJAX endpoint to get all complaints for committee
-if (isset($_GET['action']) && $_GET['action'] === 'get_all_complaints') {
-    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
-        echo '<tr><td colspan="5">Unauthorized access</td></tr>';
-        exit();
-    }
-    
-    $complaints = getAllComplaints();
-    renderCommitteeComplaintsTable($complaints);
-    exit();
-}
-
-// Render resident complaints table
-function renderResidentComplaintsTable($complaints) {
-    if (empty($complaints)) {
-        echo '<tr><td colspan="3">No complaints submitted yet.</td></tr>';
-        return;
-    }
-    
-    foreach ($complaints as $complaint) {
-        $status_history = json_decode($complaint['status_history'], true);
-        $duration_text = getDurationText($status_history);
-        
-        echo '<tr>';
-        echo '<td>' . htmlspecialchars($complaint['title']) . '<br><small>' . htmlspecialchars($complaint['description']) . '</small></td>';
-        echo '<td>' . htmlspecialchars($complaint['status']) . '</td>';
-        echo '<td>' . $duration_text . '</td>';
-        echo '</tr>';
-    }
-}
-
-// Render committee complaints table
-function renderCommitteeComplaintsTable($complaints) {
-    if (empty($complaints)) {
-        echo '<tr><td colspan="5">No complaints submitted yet.</td></tr>';
-        return;
-    }
-    
-    foreach ($complaints as $complaint) {
-        $status_history = json_decode($complaint['status_history'], true);
-        $duration_text = getDurationText($status_history);
-        
-        echo '<tr>';
-        echo '<td>' . htmlspecialchars($complaint['uploaded_by']) . '<br><small>' . htmlspecialchars($complaint['user_name']) . '</small></td>';
-        echo '<td>' . htmlspecialchars($complaint['title']) . '</td>';
-        echo '<td>' . htmlspecialchars($complaint['description']) . '</td>';
-        echo '<td>';
-        echo '<select class="status-select" data-complaint-id="' . $complaint['complaint_id'] . '">';
-        echo '<option value="pending" ' . ($complaint['status'] === 'pending' ? 'selected' : '') . '>Pending</option>';
-        echo '<option value="in-progress" ' . ($complaint['status'] === 'in-progress' ? 'selected' : '') . '>In Progress</option>';
-        echo '<option value="resolved" ' . ($complaint['status'] === 'resolved' ? 'selected' : '') . '>Resolved</option>';
-        echo '</select>';
-        echo '</td>';
-        echo '<td>' . $duration_text . '</td>';
-        echo '</tr>';
-    }
-}
-
-// Helper function to generate duration text
-function getDurationText($status_history) {
-    $text = '';
-    foreach ($status_history as $history) {
-        $timestamp = date('d M Y H:i', strtotime($history['timestamp']));
-        $text .= $history['status'] . ': ' . $timestamp . '<br>';
-    }
-    return $text;
-}
-*/
-
-// Handle complaint submission
-function handleComplaintSubmission() {
     if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'resident') {
         $_SESSION['error'] = "Unauthorized access";
         header("Location: website.php?tab=login");
@@ -911,22 +686,31 @@ function handleComplaintSubmission() {
 
     $conn = getDBConnection();
     $status = 'pending';
-    $status_history = json_encode([['status' => 'pending', 'timestamp' => date('Y-m-d H:i:s')]]);
-    
-    $stmt = $conn->prepare("INSERT INTO complaints (title, description, uploaded_by, status, status_history) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssss", $title, $description, $user_id, $status, $status_history);
-    
+    $stmt = $conn->prepare("INSERT INTO complaints (title, description, uploaded_by, status) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $title, $description, $user_id, $status);
+
     if ($stmt->execute()) {
+        $complaint_id = $stmt->insert_id;
+        $q = $conn->prepare("SELECT created_at FROM complaints WHERE complaint_id = ?");
+        $q->bind_param("i", $complaint_id);
+        $q->execute();
+        $r = $q->get_result();
+        $row = $r->fetch_assoc();
+        $created_at = $row['created_at'];
+        $status_history = "pending:-" . $created_at;
+        $u = $conn->prepare("UPDATE complaints SET status_history = ? WHERE complaint_id = ?");
+        $u->bind_param("si", $status_history, $complaint_id);
+        $u->execute();
+
         $_SESSION['success'] = "Complaint submitted successfully";
     } else {
         $_SESSION['error'] = "Error submitting complaint: " . $conn->error;
     }
-    
     header("Location: website.php?tab=complaints");
     exit();
 }
 
-// Get complaints for resident
+// Get complaints for resident specific
 function getResidentComplaints($user_id) {
     $conn = getDBConnection();
     $complaints = [];
@@ -964,6 +748,7 @@ function getAllComplaints() {
 
 // Update complaint status
 function updateComplaintStatus() {
+
     if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
         $_SESSION['error'] = "Unauthorized access";
         header("Location: website.php?tab=login");
@@ -972,7 +757,7 @@ function updateComplaintStatus() {
 
     $complaint_id = $_POST['complaint_id'] ?? '';
     $new_status = $_POST['status'] ?? '';
-    
+
     if (empty($complaint_id) || empty($new_status)) {
         $_SESSION['error'] = "Invalid request";
         header("Location: website.php?tab=committee-complaints");
@@ -980,36 +765,43 @@ function updateComplaintStatus() {
     }
 
     $conn = getDBConnection();
-    
-    // Get current status history
+    $updated_by = $_SESSION['user']['user_id'];
+
+    $check_stmt = $conn->prepare("SELECT user_id FROM users WHERE user_id = ?");
+    $check_stmt->bind_param("s", $updated_by);
+    $check_stmt->execute();
+    $result = $check_stmt->get_result();
+    if ($result->num_rows === 0) {
+        $_SESSION['error'] = "Invalid user session";
+        header("Location: website.php?tab=login");
+        exit();
+    }
+
+    // Get current status_history
     $stmt = $conn->prepare("SELECT status_history FROM complaints WHERE complaint_id = ?");
     $stmt->bind_param("i", $complaint_id);
     $stmt->execute();
     $result = $stmt->get_result();
     $complaint = $result->fetch_assoc();
-    
-    $status_history = json_decode($complaint['status_history'], true);
-    $status_history[] = ['status' => $new_status, 'timestamp' => date('Y-m-d H:i:s')];
-    $new_status_history = json_encode($status_history);
-    
-    // Update complaint status and history
-    $updated_by = $_SESSION['user']['user_id'];
+
+    $current_timestamp = date('Y-m-d');
+    $current_history = $complaint['status_history'];
+    if (!empty($current_history)) {
+        $current_history .= ',';
+    }
+    $status_history = $current_history . $new_status . ':-' . $current_timestamp;
+
     $stmt = $conn->prepare("UPDATE complaints SET status = ?, status_history = ?, updated_by = ? WHERE complaint_id = ?");
-    $stmt->bind_param("sssi", $new_status, $new_status_history, $updated_by, $complaint_id);
-    
+    $stmt->bind_param("sssi", $new_status, $status_history, $updated_by, $complaint_id);
+
     if ($stmt->execute()) {
         $_SESSION['success'] = "Complaint status updated successfully";
     } else {
         $_SESSION['error'] = "Error updating complaint status: " . $conn->error;
     }
-    
+
     header("Location: website.php?tab=committee-complaints");
     exit();
-}
-
-// Handle complaint form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'submit_complaint') {
-    handleComplaintSubmission();
 }
 
 // Handle complaint status update
@@ -1043,17 +835,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_all_complaints') {
 
 // Render resident complaints table
 function renderResidentComplaintsTable($complaints) {
-    if (empty($complaints)) {
+
+if (empty($complaints)) {
         echo '<tr><td colspan="3">No complaints submitted yet.</td></tr>';
         return;
     }
     
     foreach ($complaints as $complaint) {
-        $status_history = json_decode($complaint['status_history'], true);
-        $duration_text = getDurationText($status_history);
+        $duration_text = getDurationText($complaint['status_history'], $complaint['created_at']);
         
         echo '<tr>';
-        echo '<td>' . htmlspecialchars($complaint['title']) . '<br><small>' . htmlspecialchars($complaint['description']) . '</small></td>';
+        echo '<td>' . htmlspecialchars($complaint['title']) . '</td>';
         echo '<td>' . htmlspecialchars($complaint['status']) . '</td>';
         echo '<td>' . $duration_text . '</td>';
         echo '</tr>';
@@ -1062,15 +854,15 @@ function renderResidentComplaintsTable($complaints) {
 
 // Render committee complaints table
 function renderCommitteeComplaintsTable($complaints) {
-    if (empty($complaints)) {
+
+if (empty($complaints)) {
         echo '<tr><td colspan="5">No complaints submitted yet.</td></tr>';
         return;
     }
     
     foreach ($complaints as $complaint) {
-        $status_history = json_decode($complaint['status_history'], true);
-        $duration_text = getDurationText($status_history);
-        
+        $duration_text = getDurationText($complaint['status_history'], $complaint['created_at']);
+
         echo '<tr>';
         echo '<td>' . htmlspecialchars($complaint['uploaded_by']) . '<br><small>' . htmlspecialchars($complaint['user_name']) . '</small></td>';
         echo '<td>' . htmlspecialchars($complaint['title']) . '</td>';
@@ -1079,22 +871,37 @@ function renderCommitteeComplaintsTable($complaints) {
         echo '<select class="status-select" data-complaint-id="' . $complaint['complaint_id'] . '">';
         echo '<option value="pending" ' . ($complaint['status'] === 'pending' ? 'selected' : '') . '>Pending</option>';
         echo '<option value="in-progress" ' . ($complaint['status'] === 'in-progress' ? 'selected' : '') . '>In Progress</option>';
-        echo '<option value="resolved" ' . ($complaint['status'] === 'resolved' ? 'selected' : '') . '>Resolved</option>';
+        echo '<option value="resolved" ' . ($complaint['status'] === 'Resolved' ? 'selected' : '') . '>Resolved</option>';
         echo '</select>';
         echo '</td>';
         echo '<td>' . $duration_text . '</td>';
         echo '</tr>';
     }
+
 }
 
-// Helper function to generate duration text
-function getDurationText($status_history) {
-    $text = '';
-    foreach ($status_history as $history) {
-        $timestamp = date('d M Y H:i', strtotime($history['timestamp']));
-        $text .= $history['status'] . ': ' . $timestamp . '<br>';
+// Helper function to generate duration text from status_history string
+function getDurationText($status_history, $created_at) {
+
+if (empty($status_history)) {
+        return 'No history available';
     }
-    return $text;
+    $result = '';
+    $entries = explode(',', $status_history);
+    
+    foreach ($entries as $entry) {
+        if (strpos($entry, ':-') !== false) {
+            $parts = explode(':-', $entry, 2);
+            $status = trim($parts[0]);
+            $timestamp = trim($parts[1]);
+            $formatted_time = date('d M Y', strtotime($timestamp));
+            $result .= '<div class="status-history-item">' . $status . ':- ' . $formatted_time . '</div>';
+        } else {
+            // For backward compatibility with old format
+            $result .= '<div class="status-history-item">' . $entry . '</div>';
+        }
+    }
+    return $result;
 }
 
 //###########---COMPLAINTS_END---##############

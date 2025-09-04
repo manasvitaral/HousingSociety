@@ -38,7 +38,7 @@ session_start();
   }
   /* Tab container */
   .tab-container {
-    max-width: 600px;
+    max-width: 900px;
     margin: 30px auto 50px;
     background: white;
     border-radius: 10px;
@@ -294,34 +294,121 @@ session_start();
     color: #800080; /* Purple */
     font-weight: normal;
   }
-  /* Gallery Styling */
-  .gallery-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-  }
 
-  .photo-card {
+/* Gallery specific styles */
+.gallery-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Changed to exactly 2 columns */
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.photo-card {
     border: 1px solid #B57EDC; /* Lavender */
     border-radius: 5px;
     overflow: hidden;
     position: relative;
     background: white;
-  }
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease;
+}
 
-  .photo-card img {
+.photo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(106, 13, 173, 0.2);
+}
+
+.photo-card img {
     width: 100%;
-    height: 200px;
+    height: 160px;
     object-fit: cover;
-  }
+}
 
-  .photo-title {
+.photo-details {
     padding: 10px;
-    background-color: #E6E6FA; /* Pale Purple */
+    background-color: #E6E6FA;
+    flex-grow: 1; /* Allows details section to expand */
+    display: flex;
+    flex-direction: column;
+}
+
+.photo-title {
     font-weight: 500;
     color: #6A0DAD; /* Royal Purple */
-  }
+    margin-bottom: 8px;
+    word-break: break-word;
+    font-size: 0.9rem; /* Slightly smaller font */
+    line-height: 1.3;  /* Handle long titles */
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Limit to 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em; /* Ensure consistent height */
+}
+
+.photo-meta {
+    font-size: 0.75rem;
+    color: #6A0DAD; /* Royal Purple */
+    display: flex;
+    flex-direction: column;
+    gap: 2px;    
+    margin-top: auto; /* Push meta to bottom */   
+}
+
+.photo-meta span {
+    display: block;
+    margin-bottom: 3px;
+}
+
+.photo-actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px; /* Add gap between buttons */
+}
+
+/*.view-btn {
+    display: inline-block;
+    background: #800080; /* Purple 
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-top: 10px;
+}
+
+.view-btn:hover {
+    background: #B57EDC; /* Lavender 
+}
+*/
+/* Editable title styles */
+.editable-title {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.title-text {
+    cursor: pointer;
+    font-weight: 500;
+    color: #6A0DAD; /* Royal Purple */
+    word-break: break-word;
+    padding: 2px 5px;
+    border: 1px dashed transparent;
+}
+
+.title-text:hover {
+    border-color: #6A0DAD; /* Royal Purple */
+    background-color: #F5F0FA; /* Very Pale Purple */
+}
+
+.title-edit {
+    width: 100%;
+    padding: 2px 5px;
+    font-size: 1rem;
+    border: 1px solid #6A0DAD; /* Royal Purple */
+    border-radius: 3px;
+}
 
   /* Responsive */
   @media (max-width: 320px) {
@@ -342,6 +429,14 @@ session_start();
       font-size: 0.8rem;
     }
   }
+ @media (max-width: 480px) {
+      .gallery-container {
+          grid-template-columns: 1fr; /* Single column on mobile */
+      }
+      .photo-card img {
+          height: 200px; /* Taller images on mobile */
+      }
+  }
  @media (max-width: 500px){
    .tab-buttons button span.tab-label {
       display: none;
@@ -349,6 +444,16 @@ session_start();
     .tab-logo {
       margin-right: 0 !important;
     }
+  }
+ @media (max-width: 768px) {
+      .gallery-container {
+          grid-template-columns: repeat(2, 1fr); /* 2 column on small screens */
+      }
+  }
+ @media (max-width: 1024px) {
+      .gallery-container {
+          grid-template-columns: repeat(3, 1fr); /* 3 columns on medium screens */
+      }
   }
 </style>
 </head>
@@ -363,6 +468,7 @@ session_start();
   <div id="tab-buttons" class="tab-buttons">
     <button id="tab-login-btn" type="button" onclick="showTab('login')">LOGIN</button>
   </div>
+
   <div id="login" class="tab">
     <h3 style="text-align:center; color:#34495e;">Login</h3>
     <form id="login-form" action="code.php" method="POST">
@@ -440,15 +546,15 @@ session_start();
     </div>
 </div>
 
-  <div id="gallery" class="tab">
-    <button class="logout-btn" onclick="logout()">Logout</button>
-    <h3>Gallery</h3>
-    <div class="gallery-container" id="gallery-container">
-      // Photos will be loaded here dynamically
-    </div>
+<div id="gallery" class="tab">
+  <button class="logout-btn" onclick="logout()">Logout</button>
+  <h3>Gallery</h3>
+  <div class="gallery-container" id="gallery-container">
+    <!-- Photos will be loaded here dynamically -->
   </div>
+</div>
 
-  <div id="complaints" class="tab">
+  <!-- <div id="complaints" class="tab">
     <button class="logout-btn" onclick="logout()">Logout</button>
     <h3>Submit Complaint</h3>
     <form id="complaint-form" onsubmit="submitComplaint(event)">
@@ -472,10 +578,42 @@ session_start();
         </tr>
       </thead>
       <tbody id="complaints-table-body">
-        <!-- rows generated by JS -->
+        !-- rows generated by JS --
       </tbody>
     </table>
-  </div>
+  </div> -->
+
+<div id="complaints" class="tab">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <h3>Submit Complaint</h3>
+    <form id="complaint-form" method="POST" action="code.php">
+        <input type="hidden" name="action" value="submit_complaint">
+        <label for="complaint-title">Title</label>
+        <input type="text" id="complaint-title" name="title" required />
+        
+        <label for="complaint-description">Description</label>
+        <textarea id="complaint-description" name="description" rows="4" required></textarea>
+        
+        <button type="submit" class="submit-btn">Submit Complaint</button>
+    </form>
+    
+    <h4>Your Complaints</h4>
+    <div class="table-responsive">
+        <table id="complaints-table" aria-label="Your Complaints">
+            <thead>
+                <tr>
+                    <th>Complaint</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                </tr>
+            </thead>
+            <tbody id="complaints-table-body">
+                <!-- rows will be loaded by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
   <div id="committee-notices" class="tab">
     <button class="logout-btn" onclick="logout()">Logout</button>
     <h3>Upload Notice</h3>
@@ -498,27 +636,28 @@ session_start();
     </div>
 </div>
 
-  <div id="committee-gallery" class="tab">
-    <button class="logout-btn" onclick="logout()">Logout</button>
-    <h3>Upload Photo</h3>
-    <form id="upload-photo-form" onsubmit="uploadPhoto(event)">
-      <label for="photo-title">Title</label>
-      <input type="text" id="photo-title" name="title" required />
+<div id="committee-gallery" class="tab">
+  <button class="logout-btn" onclick="logout()">Logout</button>
+  <h3>Upload Photo</h3>
+  <form id="upload-photo-form" action="code.php" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="action" value="upload_photo">
+    <label for="photo-title">Title</label>
+    <input type="text" id="photo-title" name="title" required />
     
-      <label for="photo">Photo (PNG)</label>
-      <input type="file" id="photo" name="photo" accept=".png" required />
+    <label for="photo">Photo (PNG only, max 5MB)</label>
+    <input type="file" id="photo" name="photo" accept=".png" required />
     
-      <button type="submit" class="submit-btn">Upload Photo</button>
-    </form>
-    <div id="photo-message" class="error-msg" aria-live="polite"></div>
+    <button type="submit" class="submit-btn">Upload Photo</button>
+  </form>
+  <div id="photo-message" class="error-msg" aria-live="polite"></div>
     
-    <h4>Current Photos</h4>
-    <div class="gallery-container" id="committee-gallery-container">
-      <!-- Photos will be loaded here dynamically -->
-    </div>
+  <h4>Current Photos</h4>
+  <div class="gallery-container" id="committee-gallery-container">
+    <!-- Photos will be loaded here dynamically -->
   </div>
+</div>
 
-  <div id="committee-complaints" class="tab">
+ <!-- <div id="committee-complaints" class="tab">
     <button class="logout-btn" onclick="logout()">Logout</button>
     <h3>Complaints Management</h3>
     <table id="committee-complaints-table" aria-label="Complaints Management">
@@ -530,12 +669,33 @@ session_start();
         </tr>
       </thead>
       <tbody id="committee-complants-table-body">
-        <!-- rows generated by JS -->
+        !-- rows generated by JS --
       </tbody>
     </table>
     <button type="button" class="submit-btn" style="margin-top: 15px;" onclick="saveComplaintStatuses()">Save Complaint Statuses</button>
     <div id="status-message" class="error-msg" aria-live="polite"></div>
-  </div>
+  </div> -->
+
+<div id="committee-complaints" class="tab">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <h3>Complaints Management</h3>
+    <div class="table-responsive">
+        <table id="committee-complaints-table" aria-label="Complaints Management">
+            <thead>
+                <tr>
+                    <th>Resident</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                </tr>
+            </thead>
+            <tbody id="committee-complaints-table-body">
+                <!-- rows will be loaded by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
 
   <!-- Maintenance Tab -->
   <div id="maintenance" class="tab">
@@ -616,15 +776,15 @@ session_start();
         } else if (tabId === 'notices' && currentUser.role === 'resident') {
             loadNoticesForResident();
         } else if (tabId === 'gallery' && currentUser.role === 'resident') {
-            renderGalleryForResident();
+            loadGalleryPhotos(false);
         } else if (tabId === 'complaints' && currentUser.role === 'resident') {
-            renderResidentComplaints();
+            loadResidentComplaints();
         } else if (tabId === 'committee-notices' && currentUser.role === 'committee') {
             loadNoticesForCommittee();
         } else if (tabId === 'committee-gallery' && currentUser.role === 'committee') {
-            renderCommitteeGallery();
+            loadGalleryPhotos(true);
         } else if (tabId === 'committee-complaints' && currentUser.role === 'committee') {
-            renderCommitteeComplaints();
+            loadCommitteeComplaints();
         }
     }
 }
@@ -847,6 +1007,7 @@ function logout() {
     tabButtonsDiv.appendChild(btn);
   }
 
+//##########---NOTICE_START---#####################
 // Render notices
 function renderNotices(notices, isCommittee = false) {
     const container = document.getElementById(isCommittee ? 'committee-notices-container' : 'notices-container');
@@ -958,27 +1119,150 @@ function deleteNotice(noticeId) {
         window.location.href = 'code.php?action=delete_notice&id=' + noticeId;
     }
 }
-  // Render resident's gallery
-  function renderGalleryForResident() {
-  const container = document.getElementById('gallery-container');
-  container.innerHTML = '';
-  
-  if (galleryPhotos.length === 0) {
-    container.innerHTML = '<p>No photos available in gallery.</p>';
-    return;
-  }
-  
-  galleryPhotos.forEach((photo, index) => {
-    const photoCard = document.createElement('div');
-    photoCard.className = 'photo-card';
-    photoCard.innerHTML = `
-      <img src="${photo.imageUrl}" alt="${photo.title}">
-      <div class="photo-title">${photo.title}</div>
-    `;
-    container.appendChild(photoCard);
-  });
+
+//##########---NOTICE_END---#################
+
+//##########---GALLERY_START---##############
+// Load gallery photos
+async function loadGalleryPhotos(isCommittee = false) {
+    const container = document.getElementById(isCommittee ? 'committee-gallery-container' : 'gallery-container');
+    container.innerHTML = '<p>Loading photos...</p>';
+    
+    try {
+        const response = await fetch('code.php?action=get_gallery_photos');
+        container.innerHTML = await response.text();
+        
+        // Add event listeners for editable titles if committee
+        if (isCommittee) {
+            setupEditableTitles();
+        }
+    } catch (error) {
+        container.innerHTML = '<p class="error-msg">Error loading photos</p>';
+    }
 }
 
+// Setup editable titles for committee
+function setupEditableTitles() {
+    const editableTitles = document.querySelectorAll('.editable-title');
+    
+    editableTitles.forEach(container => {
+        const textSpan = container.querySelector('.title-text');
+        const editInput = container.querySelector('.title-edit');
+        
+        textSpan.addEventListener('click', () => {
+            textSpan.style.display = 'none';
+            editInput.style.display = 'block';
+            editInput.focus();
+        });
+        
+        editInput.addEventListener('blur', () => {
+            saveTitleChange(container);
+        });
+        
+        editInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveTitleChange(container);
+            } else if (e.key === 'Escape') {
+                editInput.value = textSpan.textContent;
+                editInput.style.display = 'none';
+                textSpan.style.display = 'inline';
+            }
+        });
+    });
+}
+
+// Save title change
+async function saveTitleChange(container) {
+    const textSpan = container.querySelector('.title-text');
+    const editInput = container.querySelector('.title-edit');
+    const photoId = container.dataset.id;
+    const newTitle = editInput.value.trim();
+    
+    if (newTitle === textSpan.textContent || newTitle === '') {
+        editInput.style.display = 'none';
+        textSpan.style.display = 'inline';
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'update_photo_title');
+        formData.append('id', photoId);
+        formData.append('title', newTitle);
+        
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            textSpan.textContent = newTitle;
+            editInput.style.display = 'none';
+            textSpan.style.display = 'inline';
+        } else {
+            alert('Error: ' + result.message);
+            editInput.value = textSpan.textContent;
+            editInput.style.display = 'none';
+            textSpan.style.display = 'inline';
+        }
+    } catch (error) {
+        alert('Error updating title');
+        editInput.value = textSpan.textContent;
+        editInput.style.display = 'none';
+        textSpan.style.display = 'inline';
+    }
+}
+
+// Delete photo
+function deletePhoto(photoId) {
+    if (confirm('Are you sure you want to delete this photo?')) {
+        window.location.href = 'code.php?action=delete_photo&id=' + photoId;
+    }
+}
+
+// Handle photo upload
+async function uploadPhoto(event) {
+    event.preventDefault();
+    const messageElem = document.getElementById('photo-message');
+    messageElem.textContent = '';
+    
+    const title = document.getElementById('photo-title').value.trim();
+    const fileInput = document.getElementById('photo');
+
+    if (!title || fileInput.files.length === 0) {
+        messageElem.textContent = 'Please fill all fields and select a photo.';
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('action', 'upload_photo');
+    formData.append('title', title);
+    formData.append('photo', fileInput.files[0]);
+    
+    try {
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            alert('Photo uploaded successfully');
+            document.getElementById('upload-photo-form').reset();
+            loadGalleryPhotos(true); // Reload gallery for committee
+        } else {
+            messageElem.textContent = 'Error uploading photo';
+        }
+    } catch (error) {
+        messageElem.textContent = 'Error uploading photo';
+    }
+}
+//##########---GALLERY_END---#################
+
+
+//@@@@@@@@@@@@@@@@@@@@@@@@@@
+/*
   // Render resident's complaints
   function renderResidentComplaints() {
     const tbody = document.getElementById('complaints-table-body');
@@ -999,28 +1283,8 @@ function deleteNotice(noticeId) {
       tbody.appendChild(tr);
     });
   }
-  // Render committee's view of gallery
-  function renderCommitteeGallery() {
-  const container = document.getElementById('committee-gallery-container');
-  container.innerHTML = '';
-  
-  if (galleryPhotos.length === 0) {
-    container.innerHTML = '<p>No photos uploaded yet.</p>';
-    return;
-  }
-  
-  galleryPhotos.forEach((photo, index) => {
-    const photoCard = document.createElement('div');
-    photoCard.className = 'photo-card';
-    photoCard.innerHTML = `
-      <img src="${photo.imageUrl}" alt="${photo.title}">
-      <div class="photo-title">${photo.title}</div>
-      <button class="delete-btn" onclick="deletePhoto(${index})">X</button>
-    `;
-    container.appendChild(photoCard);
-  });
-}
-
+//@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@
   // Render committee's view of complaints
   function renderCommitteeComplaints() {
     const tbody = document.getElementById('committee-complaints-table-body');
@@ -1061,20 +1325,104 @@ function deleteNotice(noticeId) {
       tbody.appendChild(tr);
     });
   }
-
+//@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@
   // Save complaint statuses
   function saveComplaintStatuses() {
     alert('Complaint statuses saved successfully.');
     // Here you can add backend connection to persist changes
     renderCommitteeComplaints();
   }
+*/
+//@@@@@@@@@@@@@@@
+
+//##########---COMPLAINT_START---##########
+
+// Add event listener for complaint form submission
+document.getElementById('complaint-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('code.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        }
+        return response.text();
+    })
+    .then(data => {
+        loadResidentComplaints(); // Reload complaints after submission
+        // Clear the form
+        document.getElementById('complaint-title').value = '';
+        document.getElementById('complaint-description').value = '';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+
+// Load complaints for resident
+async function loadResidentComplaints() {
+    try {
+        const response = await fetch('code.php?action=get_resident_complaints');
+        document.getElementById('complaints-table-body').innerHTML = await response.text();
+    } catch (error) {
+        document.getElementById('complaints-table-body').innerHTML = '<tr><td colspan="3">Error loading complaints</td></tr>';
+    }
+}
+
+// Load all complaints for committee
+async function loadCommitteeComplaints() {
+    try {
+        const response = await fetch('code.php?action=get_all_complaints');
+        document.getElementById('committee-complaints-table-body').innerHTML = await response.text();
+        
+        // Add event listeners for status dropdowns
+        document.querySelectorAll('.status-select').forEach(select => {
+            select.addEventListener('change', function() {
+                updateComplaintStatus(this.dataset.complaintId, this.value);
+            });
+        });
+    } catch (error) {
+        document.getElementById('committee-complaints-table-body').innerHTML = '<tr><td colspan="5">Error loading complaints</td></tr>';
+    }
+}
+
+// Update complaint status
+async function updateComplaintStatus(complaintId, status) {
+    const formData = new FormData();
+    formData.append('action', 'update_complaint_status');
+    formData.append('complaint_id', complaintId);
+    formData.append('status', status);
+    
+    try {
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            alert('Complaint status updated successfully');
+            loadCommitteeComplaints(); // Reload the complaints
+        } else {
+            alert('Error updating complaint status');
+        }
+    } catch (error) {
+        alert('Error updating complaint status');
+    }
+}
+
+//#########---COMPLAINY_END---###########
 
   // Display resident ID above the table for residents
   function renderResidentIdDisplay(userId) {
     const displayDiv = document.getElementById('resident-id-display');
     displayDiv.textContent = `Resident ID: ${userId}`;
   }
-
   // Clear resident ID display (for committee)
   function clearResidentIdDisplay() {
     const displayDiv = document.getElementById('resident-id-display');
@@ -1161,47 +1509,7 @@ function deleteNotice(noticeId) {
     document.getElementById('complaint-form').reset();
     renderResidentComplaints();
   }
-  // Photo upload
-  function uploadPhoto(event) {
-  event.preventDefault();
-  const messageElem = document.getElementById('photo-message');
-  messageElem.textContent = '';
-  
-  const title = document.getElementById('photo-title').value.trim();
-  const fileInput = document.getElementById('photo');
 
-  if (!title || fileInput.files.length === 0) {
-    messageElem.textContent = 'Please fill all fields and select a photo.';
-    return;
-  }
-  
-  const file = fileInput.files[0];
-  const reader = new FileReader();
-  
-  reader.onload = (e) => {
-    const now = new Date();
-    galleryPhotos.unshift({
-      title: title,
-      imageUrl: e.target.result,
-      date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString()
-    });
-    
-    alert(`Photo "${title}" has been uploaded.`);
-    document.getElementById('upload-photo-form').reset();
-    renderCommitteeGallery();
-    renderGalleryForResident();
-  };
-  
-  reader.readAsDataURL(file);
-}
-
-  // Delete photo
-  function deletePhoto(index) {
-    if (confirm('Are you sure you want to delete this photo?')) {
-      galleryPhotos.splice(index, 1);
-      renderCommitteeGallery();
-    }
-  }
   function showError(message) {
     const errorDiv = document.getElementById('notice-error-message');
     errorDiv.textContent = message;

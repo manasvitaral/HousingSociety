@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 04, 2025 at 06:36 PM
+-- Generation Time: Sep 18, 2025 at 06:25 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,7 +43,8 @@ CREATE TABLE `complaints` (
 --
 
 INSERT INTO `complaints` (`complaint_id`, `title`, `description`, `uploaded_by`, `status`, `status_history`, `updated_by`, `created_at`) VALUES
-(13, 'lift not working', 'lift not working in C-54 building.', 'C54106', 'resolved', 'pending:-2025-09-04 21:22:28,in-progress:-2025-09-04 17:53:08,resolved:-2025-09-04 17:53:17', 'C50002', '2025-09-04 15:52:28');
+(13, 'lift not working', 'lift not working in C-54 building.', 'C54106', 'in-progress', 'pending:-2025-09-04 21:22:28,in-progress:-2025-09-04 17:53:08,resolved:-2025-09-04 17:53:17', 'C50002', '2025-09-04 15:52:28'),
+(14, 'power cut', 'There is power cut in C-49 building', 'C49210', 'resolved', 'pending:-2025-09-09 21:48:51,in-progress:-2025-09-09,resolved:-2025-09-18', 'C50002', '2025-09-09 16:18:51');
 
 -- --------------------------------------------------------
 
@@ -83,10 +84,28 @@ CREATE TABLE `maintenance` (
   `month` tinyint(4) NOT NULL,
   `year` smallint(6) NOT NULL,
   `status` enum('no','paid','unpaid') NOT NULL DEFAULT 'no',
-  `user_id` varchar(50) NOT NULL,
+  `resident_id` varchar(50) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_by` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `maintenance`
+--
+
+INSERT INTO `maintenance` (`record_id`, `type`, `month`, `year`, `status`, `resident_id`, `created_at`, `updated_by`) VALUES
+(1, 'maintenance', 4, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(2, 'maintenance', 5, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(3, 'maintenance', 6, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(4, 'maintenance', 7, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(5, 'maintenance', 8, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(6, 'maintenance', 9, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(7, 'parking', 5, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(8, 'parking', 6, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(9, 'parking', 7, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(10, 'parking', 8, 2025, 'unpaid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(11, 'parking', 9, 2025, 'unpaid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
+(12, 'parking', 4, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108');
 
 -- --------------------------------------------------------
 
@@ -139,6 +158,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`user_id`, `name`, `email`, `building`, `room`, `password`, `hashed_password`, `role`, `created_at`) VALUES
 ('C49210', 'Manasvi', 'man@gamil.com', 'C-49', '2/10', 'man685', '$2y$10$A9khrkDBvnN7OCwOi2LDbey/PCASy/SwsBQ4R3vzNzUPwi2QKojYq', 'resident', '2025-08-28 16:24:42'),
 ('C50002', 'ADMIN', 'admin2@gmail.com', 'C-50', '0/02', 'admin123', '$2y$10$Bb6.cwfxb1DNyian3.gjn.kKujQv5FAjUlmGj13UgI2KZ7duHwEY6', 'committee', '2025-08-28 16:48:01'),
+('C52108', 'ADMIN2', 'admin2@gmail.com', 'C-52', '1/08', 'admin234', '$2y$10$Q5lgEFNxozduQj3y3K4tSelh2nWihXWTuJYUAuSgB3njc/MkQdK/S', 'committee', '2025-09-09 16:22:19'),
 ('C54106', 'Abc Xyz', 'abc@gmail.com', 'C-54', '1/06', 'abc123', '$2y$10$CUf1ScjSBUvmi9UI9ljInuE0/wNefZ4882YtvyN71/yShEn/Dq6Zi', 'resident', '2025-09-04 13:49:06');
 
 --
@@ -165,7 +185,8 @@ ALTER TABLE `gallery`
 --
 ALTER TABLE `maintenance`
   ADD PRIMARY KEY (`record_id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `user_id` (`resident_id`),
+  ADD KEY `updated_by` (`updated_by`);
 
 --
 -- Indexes for table `notices`
@@ -188,7 +209,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `complaints`
 --
 ALTER TABLE `complaints`
-  MODIFY `complaint_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `complaint_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `gallery`
@@ -200,7 +221,7 @@ ALTER TABLE `gallery`
 -- AUTO_INCREMENT for table `maintenance`
 --
 ALTER TABLE `maintenance`
-  MODIFY `record_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `notices`
@@ -229,7 +250,8 @@ ALTER TABLE `gallery`
 -- Constraints for table `maintenance`
 --
 ALTER TABLE `maintenance`
-  ADD CONSTRAINT `maintenance_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `maintenance_ibfk_1` FOREIGN KEY (`resident_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `maintenance_ibfk_2` FOREIGN KEY (`updated_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `notices`

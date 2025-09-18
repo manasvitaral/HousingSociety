@@ -32,6 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         handleComplaintSubmission();             
     } elseif ($action === 'update_complaint_status') {  
         updateComplaintStatus();                         
+    } elseif ($action === 'update_maintenance_status') {  
+        updateMaintenanceStatus();                         
     } else {
         header("Location: website.php?error=Invalid action");
         exit();
@@ -644,7 +646,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_gallery_photos') {
         }
         
         echo '<div class="photo-meta">';
-        echo '<span>Uploaded by: ' . htmlspecialchars($photo['uploaded_by_name']) . '</span>';
+        echo '<span>Uploaded by: ' . htmlspecialchars($photo['uploaded_by_name']) . '</span><br>';
         echo '<span>Date: ' . $date . '</span>';
         echo '</div>';
         
@@ -905,6 +907,367 @@ if (empty($status_history)) {
 }
 
 //###########---COMPLAINTS_END---##############
+
+//########---MAINTENANCE_START---###########
+// Get all residents for committee dropdown
+function getAllResidents() {
+    $conn = getDBConnection();
+    $residents = [];
+    
+    $query = "SELECT user_id, name FROM users WHERE role = 'resident' ORDER BY name";
+    $result = $conn->query($query);
+    
+    while ($row = $result->fetch_assoc()) {
+        $residents[] = $row;
+    }
+    
+    return $residents;
+}
+// AJAX endpoint to get all residents for committee dropdown
+if (isset($_GET['action']) && $_GET['action'] === 'get_all_residents') {
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
+        echo '<option value="">Unauthorized access</option>';
+        exit();
+    }
+    
+    $residents = getAllResidents();
+    foreach ($residents as $resident) {
+        echo '<option value="' . $resident['user_id'] . '">' . $resident['name'] . ' (' . $resident['user_id'] . ')</option>';
+    }
+    exit();
+}
+// Get maintenance data for resident (for resident view)
+function getResidentMaintenance($user_id) {
+    $conn = getDBConnection();
+    $maintenance = [];
+    
+    $current_year = date('Y');
+    $stmt = $conn->prepare("SELECT * FROM maintenance WHERE resident_id = ? AND year = ? ORDER BY month");
+    $stmt->bind_param("si", $user_id, $current_year);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        $maintenance[] = $row;
+    }
+    
+    return $maintenance;
+}
+
+// Get maintenance data for a specific resident (for committee)
+function getMaintenanceForCommittee($user_id) {
+    $conn = getDBConnection();
+    $maintenance = [];
+    
+    $current_year = date('Y');
+    $stmt = $conn->prepare("SELECT * FROM maintenance WHERE resident_id = ? AND year = ? ORDER BY month");
+    $stmt->bind_param("si", $user_id, $current_year);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        $maintenance[] = $row;
+    }
+    
+    return $maintenance;
+}
+// Handle maintenance status update (add this function)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_maintenance_status') {
+    updateMaintenanceStatus();
+}
+// Update maintenance status
+// Add this function to handle individual maintenance updates
+function updateMaintenanceStatus() {
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
+        echo "Unauthorized access";
+        exit();
+    }
+    
+    $resident_id = $_POST['resident_id'] ?? '';
+    $year = $_POST['year'] ?? '';
+    $month = $_POST['month'] ?? '';
+    $type = $_POST['type'] ?? '';
+    $status = $_POST['status'] ?? '';
+    $updated_by = $_SESSION['user']['user_id'];
+    
+    if (empty($resident_id) || empty($year) || empty($month) || empty($type)) {
+        echo "Invalid parameters";
+        exit();
+    }
+    
+    // Convert month name to number
+    $month_names = ['APR' => 4, 'MAY' => 5, 'JUN' => 6, 'JUL' => 7, 'AUG' => 8, 
+                   'SEPT' => 9, 'OCT' => 10, 'NOV' => 11, 'DEC' => 12, 
+                   'JAN' => 1, 'FEB' => 2, 'MAR' => 3];
+    $month_number = $month_names[$month] ?? 0;
+    
+    if ($month_number === 0) {
+        echo "Invalid month";
+        exit();
+    }
+    
+    $conn = getDBConnection();
+    
+    // Check if record exists
+    $check_stmt = $conn->prepare("SELECT record_id FROM maintenance WHERE resident_id = ? AND year = ? AND month = ? AND type = ?");
+    $check_stmt->bind_param("siis", $resident_id, $year, $month_number, $type);
+    $check_stmt->execute();
+    $result = $check_stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        // Update existing record
+        $stmt = $conn->prepare("UPDATE maintenance SET status = ?, updated_by = ? WHERE resident_id = ? AND year = ? AND month = ? AND type = ?");
+        $stmt->bind_param("sssiis", $status, $updated_by, $resident_id, $year, $month_number, $type);
+    } else {
+        // Insert new record
+        $stmt = $conn->prepare("INSERT INTO maintenance (resident_id, year, month, type, status, updated_by) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("siisss", $resident_id, $year, $month_number, $type, $status, $updated_by);
+    }
+    
+    if ($stmt->execute()) {
+        echo "Success";
+    } else {
+        echo "Database error: " . $conn->error;
+    }
+    
+    $conn->close();
+    exit();
+}
+/*
+function updateMaintenanceStatus() {
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
+        $_SESSION['error'] = 'Unauthorized access';
+        header("Location: website.php?tab=committee-maintenance");
+        exit();
+    }
+    
+    $resident_id = $_POST['resident_id'] ?? '';
+    $year = $_POST['year'] ?? '';
+    $month = $_POST['month'] ?? '';
+    $type = $_POST['type'] ?? '';
+    $status = $_POST['status'] ?? '';
+    $updated_by = $_SESSION['user']['user_id'];
+    
+    if (empty($resident_id) || empty($year) || empty($month) || empty($type)) {
+        $_SESSION['error'] = 'Invalid parameters';
+        header("Location: website.php?tab=committee-maintenance");
+        exit();
+    }
+    
+    // Convert month name to number
+    $month_names = ['APR' => 4, 'MAY' => 5, 'JUN' => 6, 'JUL' => 7, 'AUG' => 8, 
+                   'SEPT' => 9, 'OCT' => 10, 'NOV' => 11, 'DEC' => 12, 
+                   'JAN' => 1, 'FEB' => 2, 'MAR' => 3];
+    $month_number = $month_names[$month] ?? 0;
+    
+    if ($month_number === 0) {
+        $_SESSION['error'] = 'Invalid month';
+        header("Location: website.php?tab=committee-maintenance");
+        exit();
+    }
+    
+    $conn = getDBConnection();
+    
+    // Check if record exists
+    $check_stmt = $conn->prepare("SELECT record_id FROM maintenance WHERE resident_id = ? AND year = ? AND month = ? AND type = ?");
+    $check_stmt->bind_param("siis", $resident_id, $year, $month_number, $type);
+    $check_stmt->execute();
+    $result = $check_stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        // Update existing record
+        $stmt = $conn->prepare("UPDATE maintenance SET status = ?, updated_by = ? WHERE resident_id = ? AND year = ? AND month = ? AND type = ?");
+        $stmt->bind_param("sssiis", $status, $updated_by, $resident_id, $year, $month_number, $type);
+    } else {
+        // Insert new record
+        $stmt = $conn->prepare("INSERT INTO maintenance (resident_id, year, month, type, status, updated_by) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("siisss", $resident_id, $year, $month_number, $type, $status, $updated_by);
+    }
+    
+    if ($stmt->execute()) {
+        $_SESSION['success'] = 'Maintenance status updated successfully';
+    } else {
+        $_SESSION['error'] = 'Error updating maintenance status: ' . $conn->error;
+    }
+    
+    header("Location: website.php?tab=committee-maintenance");
+    exit();
+}
+    */
+
+// Render resident maintenance table
+function renderResidentMaintenanceTable($maintenance_data) {
+    $months = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEPT', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR'];
+    $month_numbers = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3];
+    
+    // Initialize arrays for maintenance and parking
+    $maintenance_status = array_fill(0, 12, 'no');
+    $parking_status = array_fill(0, 12, 'no');
+    
+    // Fill in the status from database
+    foreach ($maintenance_data as $record) {
+        $month_index = array_search($record['month'], $month_numbers);
+        if ($month_index !== false) {
+            if ($record['type'] === 'maintenance') {
+                $maintenance_status[$month_index] = $record['status'];
+            } elseif ($record['type'] === 'parking') {
+                $parking_status[$month_index] = $record['status'];
+            }
+        }
+    }
+    
+    // Convert status values to display format (symbols for residents)
+    $display_status = array(
+        'no' => '-',
+        'paid' => '✓',
+        'unpaid' => '✗'
+    );
+    
+    // Maintenance row
+    echo '<tr>';
+    echo '<td>Maintenance</td>';
+    foreach ($maintenance_status as $status) {
+        $display_value = isset($display_status[$status]) ? $display_status[$status] : '-';
+        echo '<td>' . htmlspecialchars($display_value) . '</td>';
+    }
+    echo '</tr>';
+    
+    // Parking row
+    echo '<tr>';
+    echo '<td>Parking Fees</td>';
+    foreach ($parking_status as $status) {
+        $display_value = isset($display_status[$status]) ? $display_status[$status] : '-';
+        echo '<td>' . htmlspecialchars($display_value) . '</td>';
+    }
+    echo '</tr>';
+}
+/*
+function renderResidentMaintenanceTable($maintenance_data) {
+    $months = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEPT', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR'];
+    $month_numbers = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3];
+    
+    // Initialize arrays for maintenance and parking
+    $maintenance_status = array_fill(0, 12, 'no');
+    $parking_status = array_fill(0, 12, 'no');
+    
+    // Fill in the status from database
+    foreach ($maintenance_data as $record) {
+        $month_index = array_search($record['month'], $month_numbers);
+        if ($month_index !== false) {
+            if ($record['type'] === 'maintenance') {
+                $maintenance_status[$month_index] = $record['status'];
+            } elseif ($record['type'] === 'parking') {
+                $parking_status[$month_index] = $record['status'];
+            }
+        }
+    }
+    
+    // Convert status values to display format (symbols for residents)
+    $display_status = array(
+        'no' => '-',
+        'paid' => '✔',
+        'unpaid' => '✘'
+    );
+    
+    // Maintenance row
+    echo '<tr>';
+    echo '<td>Maintenance</td>';
+    foreach ($maintenance_status as $status) {
+        echo '<td>' . htmlspecialchars($display_status[$status] ?? '-') . '</td>';
+    }
+    echo '</tr>';
+    
+    // Parking row
+    echo '<tr>';
+    echo '<td>Parking Fees</td>';
+    foreach ($parking_status as $status) {
+        echo '<td>' . htmlspecialchars($display_status[$status] ?? '-') . '</td>';
+    }
+    echo '</tr>';
+}
+*/
+
+// AJAX endpoint to get maintenance data for resident
+if (isset($_GET['action']) && $_GET['action'] === 'get_resident_maintenance') {
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'resident') {
+        echo '<tr><td colspan="13">Unauthorized access</td></tr>';
+        exit();
+    }
+    
+    $maintenance_data = getResidentMaintenance($_SESSION['user']['user_id']);
+    renderResidentMaintenanceTable($maintenance_data);
+    exit();
+}
+// Render committee maintenance table
+function renderCommitteeMaintenanceTable($maintenance_data, $resident_id) {
+    $current_year = date('Y');
+    $months = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEPT', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR'];
+    $month_numbers = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3];
+    
+    // Initialize arrays for maintenance and parking
+    $maintenance_status = array_fill(0, 12, 'no');
+    $parking_status = array_fill(0, 12, 'no');
+    
+    // Fill in the status from database
+    foreach ($maintenance_data as $record) {
+        $month_index = array_search($record['month'], $month_numbers);
+        if ($month_index !== false) {
+            if ($record['type'] === 'maintenance') {
+                $maintenance_status[$month_index] = $record['status'];
+            } elseif ($record['type'] === 'parking') {
+                $parking_status[$month_index] = $record['status'];
+            }
+        }
+    }
+    
+    // Maintenance row with dropdowns (text values for committee)
+    echo '<tr>';
+    echo '<td>Maintenance</td>';
+    foreach ($months as $index => $month) {
+        echo '<td>';
+        echo '<select class="maintenance-select" data-resident-id="' . $resident_id . '" data-year="' . $current_year . '" data-month="' . $month . '" data-type="maintenance">';
+        echo '<option value="no" ' . ($maintenance_status[$index] === 'no' ? 'selected' : '') . '>-</option>';
+        echo '<option value="paid" ' . ($maintenance_status[$index] === 'paid' ? 'selected' : '') . '>Paid</option>';
+        echo '<option value="unpaid" ' . ($maintenance_status[$index] === 'unpaid' ? 'selected' : '') . '>Unpaid</option>';
+        echo '</select>';
+        echo '</td>';
+    }
+    echo '</tr>';
+    
+    // Parking row with dropdowns (text values for committee)
+    echo '<tr>';
+    echo '<td>Parking Fees</td>';
+    foreach ($months as $index => $month) {
+        echo '<td>';
+        echo '<select class="maintenance-select" data-resident-id="' . $resident_id . '" data-year="' . $current_year . '" data-month="' . $month . '" data-type="parking">';
+        echo '<option value="no" ' . ($parking_status[$index] === 'no' ? 'selected' : '') . '>-</option>';
+        echo '<option value="paid" ' . ($parking_status[$index] === 'paid' ? 'selected' : '') . '>Paid</option>';
+        echo '<option value="unpaid" ' . ($parking_status[$index] === 'unpaid' ? 'selected' : '') . '>Unpaid</option>';
+        echo '</select>';
+        echo '</td>';
+    }
+    echo '</tr>';
+}
+
+// AJAX endpoint to get maintenance data for committee
+if (isset($_GET['action']) && $_GET['action'] === 'get_resident_maintenance_for_committee') {
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
+        echo '<tr><td colspan="13">Unauthorized access</td></tr>';
+        exit();
+    }
+    
+    $user_id = $_GET['user_id'] ?? '';
+    if (empty($user_id)) {
+        echo '<tr><td colspan="13">Invalid resident ID</td></tr>';
+        exit();
+    }
+    
+    $maintenance_data = getMaintenanceForCommittee($user_id);
+    renderCommitteeMaintenanceTable($maintenance_data, $user_id);
+    exit();
+}
+
+//#########---MAINTENANCE_END---##############
 
 //#########
 // Handle logout

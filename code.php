@@ -84,6 +84,7 @@ function handleLogin() {
     // Redirect to appropriate page based on role
     header("Location: website.php");
     exit();
+
 }
 function handleSignup() {
     $conn = getDBConnection();
@@ -150,8 +151,8 @@ function handleSignup() {
         exit();
     }
     
-    // Generate user ID from building and room
-    $user_id = generateUserId($building, $room);
+    // Generate user ID from building, room, and role
+    $user_id = generateUserId($building, $room, $role);
     
     // Check if user already exists
     $stmt = $conn->prepare("SELECT user_id FROM users WHERE user_id = ?");
@@ -160,28 +161,52 @@ function handleSignup() {
     $result = $stmt->get_result();
     
     if ($result->num_rows > 0) {
-        header("Location: website.php?tab=create-account&error=User ID already exists. Please check your building and room details");
+        header("Location: website.php?tab=create-account&error=User ID already exists for this role. Please check your building and room details");
         exit();
     }
     
     // Hash password
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     
+    // If creating a committee member account, also create resident account if it doesn't exist
+    if ($role === 'committee') {
+        $resident_user_id = generateUserId($building, $room, 'resident');
+        
+        // Check if resident account already exists
+        $resident_stmt = $conn->prepare("SELECT user_id FROM users WHERE user_id = ?");
+        $resident_stmt->bind_param("s", $resident_user_id);
+        $resident_stmt->execute();
+        $resident_result = $resident_stmt->get_result();
+        
+        if ($resident_result->num_rows === 0) {
+            // Create resident account
+            $resident_stmt = $conn->prepare("INSERT INTO users (name, user_id, password, hashed_password, email, role, building, room) VALUES (?, ?, ?, ?, ?, 'resident', ?, ?)");
+            $resident_stmt->bind_param("sssssss", $name, $resident_user_id, $password, $hashed_password, $email, $building, $room);
+            $resident_stmt->execute();
+        }
+    }
+    
     // Insert new user
     $stmt = $conn->prepare("INSERT INTO users (name, user_id, password, hashed_password, email, role, building, room) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("ssssssss", $name, $user_id, $password, $hashed_password, $email, $role, $building, $room);
     
     if ($stmt->execute()) {
-        header("Location: website.php?tab=login&success=Account created successfully. Please login. Your User ID is: " . $user_id);
+        $success_message = "Account created successfully. Please login. Your User ID is: " . $user_id;
+        if ($role === 'committee') {
+            $resident_user_id = generateUserId($building, $room, 'resident');
+            $success_message .= " (Resident ID: " . $resident_user_id . " also created)";
+        }
+        header("Location: website.php?tab=login&success=" . urlencode($success_message));
         exit();
     } else {
         header("Location: website.php?tab=create-account&error=Error creating account: " . $conn->error);
         exit();
     }
+
 }
 
-// Helper function to generate user ID from building and room
-function generateUserId($building, $room) {
+// Helper function to generate user ID from building, room, and role
+function generateUserId($building, $room, $role) {
     // Extract building letter and number (e.g., C-49 becomes C and 49)
     $building_parts = explode('-', $building);
     $building_letter = $building_parts[0];
@@ -192,11 +217,358 @@ function generateUserId($building, $room) {
     $floor = $room_parts[0] ?? '';
     $room_number = $room_parts[1] ?? '';
     
-    // Combine to form user ID (e.g., C49210)
-    return $building_letter . $building_number . $floor . $room_number;
+    // Create base ID (e.g., C49210)
+    $base_id = $building_letter . $building_number . $floor . $room_number;
+    
+    // Add role prefix
+    if ($role === 'resident') {
+        return 'R' . $base_id;
+    } elseif ($role === 'committee') {
+        return 'C' . $base_id;
+    }
+    
+    return $base_id; // fallback
 }
 
 //#########
+
+//###########3---HOME_START---#############
+// Function to get latest activities for home tab
+function getLatestActivities() {
+    $conn = getDBConnection();
+    $activities = [];
+    $user_role = $_SESSION['user']['role'];
+    $user_id = $_SESSION['user']['user_id'];
+    
+    // Get latest notices (last 5)
+    $noticeQuery = "SELECT n.title, n.created_at, u.name as uploaded_by_name 
+                   FROM notices n 
+                   JOIN users u ON n.uploaded_by = u.user_id 
+                   ORDER BY n.created_at DESC LIMIT 5";
+    $noticeResult = $conn->query($noticeQuery);
+    while ($row = $noticeResult->fetch_assoc()) {
+        $activities[] = [
+            'type' => 'notice',
+            'title' => $row['title'],
+            'uploaded_by' => $row['uploaded_by_name'],
+            'timestamp' => $row['created_at'],
+            'message' => "New notice '" . $row['title'] . "' has been uploaded by " . $row['uploaded_by_name']
+        ];
+    }
+    
+    // Get latest gallery photos (last 5)
+    $galleryQuery = "SELECT g.title, g.created_at, u.name as uploaded_by_name 
+                    FROM gallery g 
+                    JOIN users u ON g.uploaded_by = u.user_id 
+                    ORDER BY g.created_at DESC LIMIT 5";
+    $galleryResult = $conn->query($galleryQuery);
+    while ($row = $galleryResult->fetch_assoc()) {
+        $activities[] = [
+            'type' => 'photo',
+            'title' => $row['title'],
+            'uploaded_by' => $row['uploaded_by_name'],
+            'timestamp' => $row['created_at'],
+            'message' => "New photo '" . $row['title'] . "' added to gallery by " . $row['uploaded_by_name']
+        ];
+    }
+    
+    // Get latest complaints (last 10)
+    $complaintQuery = "SELECT c.complaint_id, c.title, c.status, c.created_at, 
+                              c.status_history, c.uploaded_by, u.name as user_name
+                      FROM complaints c 
+                      JOIN users u ON c.uploaded_by = u.user_id 
+                      ORDER BY c.created_at DESC LIMIT 10";
+    $complaintResult = $conn->query($complaintQuery);
+    
+    while ($row = $complaintResult->fetch_assoc()) {
+        // For committee users - show new complaints from all residents
+        if ($user_role === 'committee') {
+            $activities[] = [
+                'type' => 'new_complaint',
+                'title' => $row['title'],
+                'user_id' => $row['uploaded_by'],
+                'user_name' => $row['user_name'],
+                'timestamp' => $row['created_at'],
+                'message' => $row['uploaded_by'] . " is having trouble with '" . $row['title'] . "'"
+            ];
+        }
+        
+        // For resident users - only show their own complaints
+        if ($user_role === 'resident' && $row['uploaded_by'] === $user_id) {
+            $activities[] = [
+                'type' => 'new_complaint',
+                'title' => $row['title'],
+                'user_id' => $row['uploaded_by'],
+                'user_name' => $row['user_name'],
+                'timestamp' => $row['created_at'],
+                'message' => "You submitted a complaint about '" . $row['title'] . "'"
+            ];
+        }
+        
+        // Process status history for status updates
+        if (!empty($row['status_history'])) {
+            $historyEntries = explode(',', $row['status_history']);
+            
+            // If there are multiple entries, there have been status changes
+            if (count($historyEntries) > 1) {
+                // Get all status changes except the initial one
+                for ($i = 1; $i < count($historyEntries); $i++) {
+                    $entry = $historyEntries[$i];
+                    if (strpos($entry, ':-') !== false) {
+                        $parts = explode(':-', $entry, 2);
+                        $status = trim($parts[0]);
+                        $timestamp = trim($parts[1]);
+                        
+                        // Only include recent status changes (last 30 days)
+                        if (strtotime($timestamp) > strtotime('-30 days')) {
+                            // For committee - show all status updates
+                            if ($user_role === 'committee') {
+                                $activities[] = [
+                                    'type' => 'status_update',
+                                    'title' => $row['title'],
+                                    'status' => $status,
+                                    'user_id' => $row['uploaded_by'],
+                                    'timestamp' => $timestamp,
+                                    'message' => "Complaint '" . $row['title'] . "' from " . $row['uploaded_by'] . " marked as '" . $status . "'"
+                                ];
+                            }
+                            
+                            // For resident - only show their own status updates
+                            if ($user_role === 'resident' && $row['uploaded_by'] === $user_id) {
+                                $activities[] = [
+                                    'type' => 'status_update',
+                                    'title' => $row['title'],
+                                    'status' => $status,
+                                    'timestamp' => $timestamp,
+                                    'message' => "Your complaint regarding '" . $row['title'] . "' has been marked as '" . $status . "'"
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Get maintenance status updates based on user role
+    if ($user_role === 'committee') {
+        // Committee sees all maintenance updates from last 30 days
+        $maintenanceQuery = "SELECT m.record_id, m.type, m.status, m.created_at,
+                                    u.user_id, u.name as user_name,
+                                    updater.name as updated_by_name
+                            FROM maintenance m 
+                            JOIN users u ON m.resident_id = u.user_id 
+                            LEFT JOIN users updater ON m.updated_by = updater.user_id
+                            WHERE m.created_at > DATE_SUB(NOW(), INTERVAL 30 DAY)
+                            ORDER BY m.created_at DESC LIMIT 10";
+    } else {
+        // Resident sees only their own maintenance updates from last 30 days
+        $maintenanceQuery = "SELECT m.record_id, m.type, m.status, m.created_at,
+                                    u.user_id, u.name as user_name,
+                                    updater.name as updated_by_name
+                            FROM maintenance m 
+                            JOIN users u ON m.resident_id = u.user_id 
+                            LEFT JOIN users updater ON m.updated_by = updater.user_id
+                            WHERE m.resident_id = ? AND m.created_at > DATE_SUB(NOW(), INTERVAL 30 DAY)
+                            ORDER BY m.created_at DESC LIMIT 10";
+    }
+    
+    if ($user_role === 'resident') {
+        $maintenanceStmt = $conn->prepare($maintenanceQuery);
+        $maintenanceStmt->bind_param("s", $user_id);
+        $maintenanceStmt->execute();
+        $maintenanceResult = $maintenanceStmt->get_result();
+    } else {
+        $maintenanceResult = $conn->query($maintenanceQuery);
+    }
+    
+    while ($row = $maintenanceResult->fetch_assoc()) {
+        $typeDisplay = ($row['type'] === 'maintenance') ? 'Maintenance' : 'Parking Fees';
+        
+        if ($user_role === 'committee') {
+            $message = $row['user_name'] . "'s " . $typeDisplay . " updated to '" . $row['status'] . "'";
+        } else {
+            $message = "Your " . $typeDisplay . " status updated to '" . $row['status'] . "'";
+        }
+        
+        $activities[] = [
+            'type' => 'maintenance_update',
+            'user_name' => $row['user_name'],
+            'user_id' => $row['user_id'],
+            'maintenance_type' => $row['type'],
+            'status' => $row['status'],
+            'timestamp' => $row['created_at'],
+            'message' => $message
+        ];
+    }
+    
+    // Sort all activities by timestamp (newest first) and get latest 15
+    usort($activities, function($a, $b) {
+        return strtotime($b['timestamp']) - strtotime($a['timestamp']);
+    });
+    
+    return array_slice($activities, 0, 15);
+}
+
+// AJAX endpoint to get latest activities
+if (isset($_GET['action']) && $_GET['action'] === 'get_latest_activities') {
+    if (!isset($_SESSION['user'])) {
+        echo '<p>Please login to view activities.</p>';
+        exit();
+    }
+    
+    $activities = getLatestActivities();
+    
+    if (empty($activities)) {
+        echo '<p>No recent activities found. New updates will appear here.</p>';
+        exit();
+    }
+    
+    foreach ($activities as $activity) {
+        $timestamp = date('d M Y H:i', strtotime($activity['timestamp']));
+        $icon = getActivityIcon($activity['type']);
+        
+        echo '<div class="activity-item">';
+        echo '<div class="activity-icon">' . $icon . '</div>';
+        echo '<div class="activity-content">';
+        echo '<div class="activity-message">' . htmlspecialchars($activity['message']) . '</div>';
+        echo '<div class="activity-time">' . $timestamp . '</div>';
+        echo '</div>';
+        echo '</div>';
+    }
+    exit();
+}
+
+// Helper function to get appropriate icon for each activity type
+function getActivityIcon($type) {
+    switch ($type) {
+        case 'notice':
+            return '📄';
+        case 'photo':
+            return '🖼️';
+        case 'new_complaint':
+            return '⚠️';
+        case 'status_update':
+            return '🔄';
+        case 'maintenance_update':
+            return '💰';
+        default:
+            return '🔔';
+    }
+}
+
+// Function to get quick stats for home tab
+function getQuickStats($userRole, $userId) {
+    $conn = getDBConnection();
+    $stats = [];
+    
+    if ($userRole === 'resident') {
+        // Resident stats - pending complaints
+        $complaintQuery = "SELECT COUNT(*) as count FROM complaints 
+                          WHERE uploaded_by = ? AND status = 'pending'";
+        $stmt = $conn->prepare($complaintQuery);
+        $stmt->bind_param("s", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stats['pending_complaints'] = $result->fetch_assoc()['count'];
+        
+        // Unpaid maintenance for current year
+        $currentYear = date('Y');
+        $maintenanceQuery = "SELECT COUNT(*) as count FROM maintenance 
+                            WHERE resident_id = ? AND year = ? AND status = 'unpaid' AND type = 'maintenance'";
+        $stmt = $conn->prepare($maintenanceQuery);
+        $stmt->bind_param("si", $userId, $currentYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stats['unpaid_maintenance'] = $result->fetch_assoc()['count'];
+        
+        // New notices in last 7 days
+        $noticesQuery = "SELECT COUNT(*) as count FROM notices 
+                        WHERE created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)";
+        $result = $conn->query($noticesQuery);
+        $stats['new_notices'] = $result->fetch_assoc()['count'];
+        
+    } else if ($userRole === 'committee') {
+        // Committee stats - total complaints
+        $totalComplaintsQuery = "SELECT COUNT(*) as count FROM complaints";
+        $result = $conn->query($totalComplaintsQuery);
+        $stats['total_complaints'] = $result->fetch_assoc()['count'];
+        
+        // Pending complaints
+        $pendingComplaintsQuery = "SELECT COUNT(*) as count FROM complaints WHERE status = 'pending'";
+        $result = $conn->query($pendingComplaintsQuery);
+        $stats['pending_complaints'] = $result->fetch_assoc()['count'];
+        
+        // Total residents
+        $totalResidentsQuery = "SELECT COUNT(*) as count FROM users WHERE role = 'resident'";
+        $result = $conn->query($totalResidentsQuery);
+        $stats['total_residents'] = $result->fetch_assoc()['count'];
+        
+        // Unpaid maintenance count
+        $currentYear = date('Y');
+        $unpaidMaintenanceQuery = "SELECT COUNT(*) as count FROM maintenance 
+                                  WHERE year = ? AND status = 'unpaid'";
+        $stmt = $conn->prepare($unpaidMaintenanceQuery);
+        $stmt->bind_param("i", $currentYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stats['unpaid_maintenance'] = $result->fetch_assoc()['count'];
+    }
+    
+    return $stats;
+}
+
+// AJAX endpoint to get quick stats
+if (isset($_GET['action']) && $_GET['action'] === 'get_quick_stats') {
+    if (!isset($_SESSION['user'])) {
+        echo json_encode([]);
+        exit();
+    }
+    
+    $stats = getQuickStats($_SESSION['user']['role'], $_SESSION['user']['user_id']);
+    
+    // Since we can't use JSON, we'll return HTML directly
+    if ($_SESSION['user']['role'] === 'resident') {
+        echo '<div class="stat-card">';
+        echo '<div class="stat-number">' . $stats['pending_complaints'] . '</div>';
+        echo '<div class="stat-label">Pending Complaints</div>';
+        echo '</div>';
+        
+        echo '<div class="stat-card">';
+        echo '<div class="stat-number">' . $stats['unpaid_maintenance'] . '</div>';
+        echo '<div class="stat-label">Unpaid Maintenance</div>';
+        echo '</div>';
+        
+        echo '<div class="stat-card">';
+        echo '<div class="stat-number">' . $stats['new_notices'] . '</div>';
+        echo '<div class="stat-label">New Notices (7 days)</div>';
+        echo '</div>';
+        
+    } else if ($_SESSION['user']['role'] === 'committee') {
+        echo '<div class="stat-card">';
+        echo '<div class="stat-number">' . $stats['total_complaints'] . '</div>';
+        echo '<div class="stat-label">Total Complaints</div>';
+        echo '</div>';
+        
+        echo '<div class="stat-card">';
+        echo '<div class="stat-number">' . $stats['pending_complaints'] . '</div>';
+        echo '<div class="stat-label">Pending Complaints</div>';
+        echo '</div>';
+        
+        echo '<div class="stat-card">';
+        echo '<div class="stat-number">' . $stats['total_residents'] . '</div>';
+        echo '<div class="stat-label">Total Residents</div>';
+        echo '</div>';
+        
+        echo '<div class="stat-card">';
+        echo '<div class="stat-number">' . $stats['unpaid_maintenance'] . '</div>';
+        echo '<div class="stat-label">Unpaid Maintenance</div>';
+        echo '</div>';
+    }
+    
+    exit();
+}
+//#############---HOME_END---#################3333
 
 //#############---NOTICE_START---############
 // Handle notice upload
@@ -580,28 +952,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_photo' && isset($_GET[
     }
     exit();
 }
-
-// Handle photo title update
-/*
-if (isset($_POST['action']) && $_POST['action'] === 'update_photo_title' && isset($_POST['id'])) {
-    // Verify user is logged in and has committee role
-    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
-        echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
-        exit();
-    }
-
-    $photoId = (int)$_POST['id'];
-    $newTitle = trim($_POST['title'] ?? '');
-    
-    if (empty($newTitle)) {
-        echo json_encode(['success' => false, 'message' => 'Title cannot be empty']);
-        exit();
-    }
-
-    $conn = getDBConnection();
-    $stmt = $conn->prepare("UPDATE gallery SET title = ? WHERE photo_id = ?");
-    $stmt->bind_param("si", $newTitle, $photoId);
-*/
 
 // Handle AJAX request for gallery photos
 if (isset($_GET['action']) && $_GET['action'] === 'get_gallery_photos') {
@@ -1015,9 +1365,9 @@ function updateMaintenanceStatus() {
     $result = $check_stmt->get_result();
     
     if ($result->num_rows > 0) {
-        // Update existing record
-        $stmt = $conn->prepare("UPDATE maintenance SET status = ?, updated_by = ? WHERE resident_id = ? AND year = ? AND month = ? AND type = ?");
-        $stmt->bind_param("sssiis", $status, $updated_by, $resident_id, $year, $month_number, $type);
+    // Update existing record with timestamp
+    $stmt = $conn->prepare("UPDATE maintenance SET status = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE resident_id = ? AND year = ? AND month = ? AND type = ?");
+    $stmt->bind_param("sssiis", $status, $updated_by, $resident_id, $year, $month_number, $type);
     } else {
         // Insert new record
         $stmt = $conn->prepare("INSERT INTO maintenance (resident_id, year, month, type, status, updated_by) VALUES (?, ?, ?, ?, ?, ?)");
@@ -1033,67 +1383,6 @@ function updateMaintenanceStatus() {
     $conn->close();
     exit();
 }
-/*
-function updateMaintenanceStatus() {
-    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
-        $_SESSION['error'] = 'Unauthorized access';
-        header("Location: website.php?tab=committee-maintenance");
-        exit();
-    }
-    
-    $resident_id = $_POST['resident_id'] ?? '';
-    $year = $_POST['year'] ?? '';
-    $month = $_POST['month'] ?? '';
-    $type = $_POST['type'] ?? '';
-    $status = $_POST['status'] ?? '';
-    $updated_by = $_SESSION['user']['user_id'];
-    
-    if (empty($resident_id) || empty($year) || empty($month) || empty($type)) {
-        $_SESSION['error'] = 'Invalid parameters';
-        header("Location: website.php?tab=committee-maintenance");
-        exit();
-    }
-    
-    // Convert month name to number
-    $month_names = ['APR' => 4, 'MAY' => 5, 'JUN' => 6, 'JUL' => 7, 'AUG' => 8, 
-                   'SEPT' => 9, 'OCT' => 10, 'NOV' => 11, 'DEC' => 12, 
-                   'JAN' => 1, 'FEB' => 2, 'MAR' => 3];
-    $month_number = $month_names[$month] ?? 0;
-    
-    if ($month_number === 0) {
-        $_SESSION['error'] = 'Invalid month';
-        header("Location: website.php?tab=committee-maintenance");
-        exit();
-    }
-    
-    $conn = getDBConnection();
-    
-    // Check if record exists
-    $check_stmt = $conn->prepare("SELECT record_id FROM maintenance WHERE resident_id = ? AND year = ? AND month = ? AND type = ?");
-    $check_stmt->bind_param("siis", $resident_id, $year, $month_number, $type);
-    $check_stmt->execute();
-    $result = $check_stmt->get_result();
-    
-    if ($result->num_rows > 0) {
-        // Update existing record
-        $stmt = $conn->prepare("UPDATE maintenance SET status = ?, updated_by = ? WHERE resident_id = ? AND year = ? AND month = ? AND type = ?");
-        $stmt->bind_param("sssiis", $status, $updated_by, $resident_id, $year, $month_number, $type);
-    } else {
-        // Insert new record
-        $stmt = $conn->prepare("INSERT INTO maintenance (resident_id, year, month, type, status, updated_by) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("siisss", $resident_id, $year, $month_number, $type, $status, $updated_by);
-    }
-    
-    if ($stmt->execute()) {
-        $_SESSION['success'] = 'Maintenance status updated successfully';
-    } else {
-        $_SESSION['error'] = 'Error updating maintenance status: ' . $conn->error;
-    }
-    
-    header("Location: website.php?tab=committee-maintenance");
-    exit();
-}
-    */
 
 // Render resident maintenance table
 function renderResidentMaintenanceTable($maintenance_data) {
@@ -1141,51 +1430,6 @@ function renderResidentMaintenanceTable($maintenance_data) {
     }
     echo '</tr>';
 }
-/*
-function renderResidentMaintenanceTable($maintenance_data) {
-    $months = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEPT', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR'];
-    $month_numbers = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3];
-    
-    // Initialize arrays for maintenance and parking
-    $maintenance_status = array_fill(0, 12, 'no');
-    $parking_status = array_fill(0, 12, 'no');
-    
-    // Fill in the status from database
-    foreach ($maintenance_data as $record) {
-        $month_index = array_search($record['month'], $month_numbers);
-        if ($month_index !== false) {
-            if ($record['type'] === 'maintenance') {
-                $maintenance_status[$month_index] = $record['status'];
-            } elseif ($record['type'] === 'parking') {
-                $parking_status[$month_index] = $record['status'];
-            }
-        }
-    }
-    
-    // Convert status values to display format (symbols for residents)
-    $display_status = array(
-        'no' => '-',
-        'paid' => '✔',
-        'unpaid' => '✘'
-    );
-    
-    // Maintenance row
-    echo '<tr>';
-    echo '<td>Maintenance</td>';
-    foreach ($maintenance_status as $status) {
-        echo '<td>' . htmlspecialchars($display_status[$status] ?? '-') . '</td>';
-    }
-    echo '</tr>';
-    
-    // Parking row
-    echo '<tr>';
-    echo '<td>Parking Fees</td>';
-    foreach ($parking_status as $status) {
-        echo '<td>' . htmlspecialchars($display_status[$status] ?? '-') . '</td>';
-    }
-    echo '</tr>';
-}
-*/
 
 // AJAX endpoint to get maintenance data for resident
 if (isset($_GET['action']) && $_GET['action'] === 'get_resident_maintenance') {

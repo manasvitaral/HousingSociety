@@ -7,8 +7,8 @@ session_start();
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="icon" href="Titlelogo.png" type="image/png">
-<!-- <link rel="stylesheet" href="styles.css"> -->
 <title>SocietySphere</title>
+
 <style>
   /* Reset and base */
   body {
@@ -36,6 +36,15 @@ session_start();
     text-transform: uppercase;
     letter-spacing: 2px;
     margin: 0;
+  }
+  /* access container */
+  .access-container {
+    max-width: 900px;
+    margin: 30px auto 50px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(106, 13, 173, 0.1); /* Royal Purple shadow */
+    overflow: hidden;
   }
   /* Tab container */
   .tab-container {
@@ -90,6 +99,306 @@ session_start();
   .tab.active {
     display: block;
   }
+  /* Home Tab Styles */
+.welcome-section {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #F5F0FA;
+    border-radius: 8px;
+}
+
+.welcome-section h2 {
+    color: #6A0DAD;
+    margin-bottom: 10px;
+}
+
+.latest-updates-section {
+    margin-bottom: 30px;
+}
+
+.latest-updates-section h3 {
+    color: #6A0DAD;
+    border-bottom: 2px solid #B57EDC;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Enhanced Home Tab Styles */
+.activities-container {
+    max-height: 450px; /* Increased height */
+    overflow-y: auto;
+    border: 1px solid #B57EDC;
+    border-radius: 8px;
+    padding: 15px;
+    background: #FAFAFA;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px; /* Increased padding */
+    margin-bottom: 12px;
+    background: #F9F6FF;
+    border-left: 4px solid #6A0DAD;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(106, 13, 173, 0.1);
+}
+
+.activity-item:hover {
+    transform: translateX(3px);
+    background: #F5F0FA;
+    box-shadow: 0 4px 8px rgba(106, 13, 173, 0.15);
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex-grow: 1;
+}
+
+.activity-message {
+    font-weight: 500;
+    color: #6A0DAD;
+    margin-bottom: 6px;
+    line-height: 1.5; /* Better line spacing for longer messages */
+    word-wrap: break-word; /* Handle long titles */
+}
+
+.activity-time {
+    font-size: 0.82rem;
+    color: #800080;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.activities-loading {
+    text-align: center;
+    color: #800080;
+    font-style: italic;
+    padding: 20px;
+}
+
+.quick-stats-section h3 {
+    color: #6A0DAD;
+    border-bottom: 2px solid #B57EDC;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+/* For committee users who have 4 stat cards */
+.committee-user .quick-stats {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.stat-card {
+    background: #F5F0FA;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    border-left: 4px solid #6A0DAD;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #6A0DAD;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #800080;
+}
+
+/* Scrollbar styling for activities container */
+.activities-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.activities-container::-webkit-scrollbar-track {
+    background: #F5F0FA;
+    border-radius: 3px;
+}
+
+.activities-container::-webkit-scrollbar-thumb {
+    background: #B57EDC;
+    border-radius: 3px;
+}
+
+.activities-container::-webkit-scrollbar-thumb:hover {
+    background: #6A0DAD;
+}
+/* About Tab Specific Styles */
+.about-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 10px;
+}
+
+.about-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #F5F0FA 0%, #E6E6FA 100%);
+    border-radius: 10px;
+    border-left: 5px solid #6A0DAD;
+}
+
+.about-header h2 {
+    color: #6A0DAD;
+    margin-bottom: 10px;
+    font-size: 2rem;
+}
+
+.tagline {
+    font-size: 1.2rem;
+    color: #800080;
+    font-weight: 500;
+}
+
+.about-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.mission-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 25px;
+    background: #F9F6FF;
+    border-radius: 8px;
+    border-left: 4px solid #B57EDC;
+}
+
+.section-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.mission-section h3 {
+    color: #6A0DAD;
+    margin-bottom: 10px;
+}
+
+.mission-section p {
+    color: #555;
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+.benefits-section h3,
+.features-section h3 {
+    color: #6A0DAD;
+    border-bottom: 2px solid #B57EDC;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.benefit-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(106, 13, 173, 0.1);
+    border: 1px solid #E6E6FA;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.benefit-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(106, 13, 173, 0.15);
+}
+
+.benefit-icon {
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+.benefit-card h4 {
+    color: #6A0DAD;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.benefit-card p {
+    color: #666;
+    line-height: 1.5;
+}
+
+.features-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    background: #F5F0FA;
+    border-radius: 6px;
+    transition: background 0.3s ease;
+}
+
+.feature-item:hover {
+    background: #E6E6FA;
+}
+
+.feature-bullet {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.feature-text {
+    color: #555;
+    line-height: 1.5;
+}
+
+.committee-section {
+    margin-top: 20px;
+}
+
+.committee-card {
+    background: linear-gradient(135deg, #6A0DAD 0%, #800080 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.committee-card h3 {
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+.committee-card p {
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.committee-signature {
+    font-style: italic;
+    font-weight: 500;
+    margin-top: 20px;
+}
   /* Forms */
   form {
     display: flex;
@@ -318,7 +627,7 @@ session_start();
 /* Gallery specific styles */
 .gallery-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Changed to exactly 2 columns */
+    grid-template-columns: 1fr; /* Only 1 column 1 photo per row */
     gap: 15px;
     margin-top: 20px;
 }
@@ -330,8 +639,9 @@ session_start();
     position: relative;
     background: white;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     transition: transform 0.2s ease;
+    max-width: 100%;
 }
 
 .photo-card:hover {
@@ -340,13 +650,14 @@ session_start();
 }
 
 .photo-card img {
-    width: 100%;
-    height: 160px;
+    width: 250px;
+    height: 200px;
     object-fit: cover;
+    flex-shrink: 0; /* Prevent image from shrinking */
 }
 
 .photo-details {
-    padding: 10px;
+    padding: 15px;
     background-color: #E6E6FA;
     flex-grow: 1; /* Allows details section to expand */
     display: flex;
@@ -358,8 +669,8 @@ session_start();
     color: #6A0DAD; /* Royal Purple */
     margin-bottom: 8px;
     word-break: break-word;
-    font-size: 0.9rem; /* Slightly smaller font */
-    line-height: 1.3;  /* Handle long titles */
+    font-size: 1.1rem; /* Slightly smaller font */
+    line-height: 1.4;  /* Handle long titles */
     display: -webkit-box;
     -webkit-line-clamp: 2; /* Limit to 2 lines */
     -webkit-box-orient: vertical;
@@ -368,11 +679,11 @@ session_start();
 }
 
 .photo-meta {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: #6A0DAD; /* Royal Purple */
     display: flex;
     flex-direction: column;
-    gap: 2px;    
+    gap: 5px;    
     margin-top: auto; /* Push meta to bottom */   
 }
 
@@ -388,20 +699,6 @@ session_start();
     gap: 8px; /* Add gap between buttons */
 }
 
-/*.view-btn {
-    display: inline-block;
-    background: #800080; /* Purple 
-    color: white;
-    padding: 6px 12px;
-    border-radius: 4px;
-    text-decoration: none;
-    margin-top: 10px;
-}
-
-.view-btn:hover {
-    background: #B57EDC; /* Lavender 
-}
-*/
 /* Editable title styles */
 .editable-title {
     position: relative;
@@ -450,11 +747,24 @@ session_start();
     }
   }
  @media (max-width: 480px) {
+      .about-header h2 {
+        font-size: 1.7rem;
+    }
+    
+    .tagline {
+        font-size: 1rem;
+    }
+    
+    .mission-section,
+    .benefit-card,
+    .feature-item {
+        padding: 15px;
+    }
       .gallery-container {
           grid-template-columns: 1fr; /* Single column on mobile */
       }
       .photo-card img {
-          height: 200px; /* Taller images on mobile */
+          height: 180px; /* Taller images on mobile */
       }
   }
  @media (max-width: 500px){
@@ -466,14 +776,53 @@ session_start();
     }
   }
  @media (max-width: 768px) {
-      .gallery-container {
-          grid-template-columns: repeat(2, 1fr); /* 2 column on small screens */
-      }
+    .quick-stats,
+    .committee-user .quick-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .activity-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .activity-icon {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    .mission-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .benefits-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .feature-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    .photo-card {
+        flex-direction: column; /* Stack vertically on mobile */
+    }
+    
+    .photo-card img {
+        width: 100%; /* Full width on mobile */
+        height: 200px;
+    }
+    
+    .gallery-container {
+        grid-template-columns: 1fr; /* Still 1 column on mobile */
+    }
   }
  @media (max-width: 1024px) {
       .gallery-container {
           grid-template-columns: repeat(3, 1fr); /* 3 columns on medium screens */
       }
+      .committee-user .quick-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
   }
 </style>
 </head>
@@ -484,7 +833,7 @@ session_start();
     <h1>Society Sphere</h1>
 </div>
 
-<div class="tab-container">
+<div class="access-container">
   <div id="tab-buttons" class="tab-buttons">
     <button id="tab-login-btn" type="button" onclick="showTab('login')">LOGIN</button>
   </div>
@@ -553,9 +902,125 @@ session_start();
         <button type="submit" class="submit-btn">Create Account</button>
     </form>
 </div>
+</div>
 
-  <!-- Resident tabs  
+<div class="tab-container">
+  <!-- tabs  
   ############# -->
+  <div id="home" class="tab">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    
+    <div class="welcome-section">
+        <h2>Welcome to SocietySphere</h2>
+        <p>Connecting Residents, Strengthening Community.</p>
+        <p>Your one-stop destination for a seamless society living experience.</p>
+    </div>
+    
+    <div class="latest-updates-section">
+        <h3>Latest Community Updates</h3>
+        <div id="latest-activities-container" class="activities-container">
+            <!-- Activities will be loaded here dynamically -->
+            <p>Loading latest activities...</p>
+        </div>
+    </div>
+    
+    <div class="quick-stats-section">
+        <h3>Quick Overview</h3>
+        <div id="quick-stats" class="quick-stats">
+            <!-- Quick stats will be loaded here -->
+        </div>
+    </div>
+</div>
+
+  <div id="about" class="tab">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    
+    <div class="about-container">
+        <div class="about-header">
+            <h2>About SocietySphere Portal</h2>
+            <p class="tagline">Transparency and Convenience at Your Fingertips</p>
+        </div>
+        
+        <div class="about-content">
+            <div class="mission-section">
+                <div class="section-icon">🎯</div>
+                <h3>Our Mission</h3>
+                <p>This online portal is an initiative by the Managing Committee to modernize our communication and management processes. Our goal is to foster greater transparency, improve efficiency, and provide you with instant access to important information, 24/7.</p>
+            </div>
+            
+            <div class="benefits-section">
+                <h3>Key Benefits</h3>
+                <div class="benefits-grid">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🔒</div>
+                        <h4>Secure Platform</h4>
+                        <p>This secure platform is designed to streamline society operations and enhance connectivity among all residents.</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">⚡</div>
+                        <h4>Efficient Management</h4>
+                        <p>Automated processes reduce administrative burdens and save time for both residents and committee members.</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🌐</div>
+                        <h4>24/7 Accessibility</h4>
+                        <p>Access important notices, maintenance information, and community updates anytime, anywhere.</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🤝</div>
+                        <h4>Enhanced Connectivity</h4>
+                        <p>Better communication channels between residents and the managing committee for a harmonious community.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="features-section">
+                <h3>What You Can Do</h3>
+                <div class="features-list">
+                    <div class="feature-item">
+                        <span class="feature-bullet">📋</span>
+                        <div class="feature-text">
+                            <strong>View Society Notices:</strong> Stay updated with the latest announcements and circulars.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <span class="feature-bullet">📸</span>
+                        <div class="feature-text">
+                            <strong>Browse Community Gallery:</strong> View photos of society events and activities.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <span class="feature-bullet">📝</span>
+                        <div class="feature-text">
+                            <strong>Submit Complaints:</strong> Report issues and track their resolution status.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <span class="feature-bullet">💰</span>
+                        <div class="feature-text">
+                            <strong>Check Maintenance Status:</strong> View your maintenance and parking fee payment records.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="committee-section">
+                <div class="committee-card">
+                    <h3>Committee Message</h3>
+                    <p>We are committed to leveraging technology to improve the quality of life in our society. SocietySphere represents our dedication to transparent governance and resident convenience.</p>
+                    <p class="committee-signature">- The Managing Committee</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
   <div id="notices" class="tab">
     <button class="logout-btn" onclick="logout()">Logout</button>
     <h3>Society Notices</h3>
@@ -811,7 +1276,10 @@ session_start();
     
     // Additional logic for loading content based on the tab
     if (currentUser) {
-        if (tabId === 'maintenance' && currentUser.role === 'resident') {
+        if (tabId === 'home') {
+            loadLatestActivities();
+            loadQuickStats();
+        } else if (tabId === 'maintenance' && currentUser.role === 'resident') {
             loadMaintenanceData();
         } else if (tabId === 'committee-maintenance' && currentUser.role === 'committee') {
             loadCommitteeMaintenanceInterface();
@@ -830,9 +1298,7 @@ session_start();
         }
     }
 }
-  // Remove the onsubmit handlers from your forms and let them submit normally
-// Just keep the form validation
-// At the start of your script, check for URL parameters
+
 document.addEventListener('DOMContentLoaded', function() {
     showTab('login');
 
@@ -861,13 +1327,12 @@ document.addEventListener('DOMContentLoaded', function() {
             role: '<?php echo $_SESSION['user']['role']; ?>'
         };
         renderTabButtons(currentUser.role);
-        // Show appropriate default tab based on role
-      if (currentUser.role === 'resident') {
-        showTab('notices');
-      } else if (currentUser.role === 'committee') {
-        document.body.classList.add('committee-user');
-        showTab('committee-notices');
-      }
+
+     // Show home tab for all users regardless of role
+if (currentUser.role === 'committee') {
+  document.body.classList.add('committee-user');
+}
+showTab('home'); // Same home tab for all roles
     <?php else: ?>
       renderTabButtons('guest');
     <?php endif; ?>
@@ -961,6 +1426,8 @@ function logout() {
 
   // Tab definitions for roles
   const tabsForResident = [
+    { id: 'home', label: 'Home' },
+    { id: 'about', label: 'About Us' },
     { id: 'notices', label: 'Notices' },
     { id: 'gallery', label: 'Gallery' },
     { id: 'complaints', label: 'Complaints' },
@@ -968,23 +1435,13 @@ function logout() {
 ];
 
 const tabsForCommittee = [
+    { id: 'home', label: 'Home' },
+    { id: 'about', label: 'About Us' },
     { id: 'committee-notices', label: 'Notices' },
     { id: 'committee-gallery', label: 'Gallery' },
     { id: 'committee-complaints', label: 'Complaints' },
     { id: 'committee-maintenance', label: 'Maintenance' }
 ];
-
-  // Sample maintenance data for multiple residents
-  /*let maintenanceData = {
-    resident1: {
-      maintenance: ['-','-','-','-','-','-','-','-','-','-','-','-'],
-      parking: ['-','-','-','-','-','-','-','-','-','-','-','-']
-    },
-    resident2: {
-      maintenance: ['-','-','-','-','-','-','-','-','-','-','-','-'],
-      parking: ['-','-','-','-','-','-','-','-','-','-','-','-']
-    }
-  };*/
 
   // Data storage for notices, gallery and complaints
   let notices = [];
@@ -1047,6 +1504,93 @@ const tabsForCommittee = [
     btn.onclick = () => showTab(tabId);
     tabButtonsDiv.appendChild(btn);
   }
+
+//###########---HOME_START---###################
+// Enhanced load latest activities function
+async function loadLatestActivities() {
+    const container = document.getElementById('latest-activities-container');
+    container.innerHTML = '<div class="activities-loading">Loading latest activities...</div>';
+    
+    try {
+        const response = await fetch('code.php?action=get_latest_activities');
+        const content = await response.text();
+        
+        if (response.ok) {
+            container.innerHTML = content;
+        } else {
+            container.innerHTML = '<p class="error-msg">Unable to load activities. Please try again later.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading activities:', error);
+        container.innerHTML = '<p class="error-msg">Network error loading activities.</p>';
+    }
+}
+
+// Load quick stats based on user role
+async function loadQuickStats() {
+    const statsContainer = document.getElementById('quick-stats');
+    
+    try {
+        const response = await fetch('code.php?action=get_quick_stats');
+        statsContainer.innerHTML = await response.text();
+    } catch (error) {
+        // Fallback to placeholder stats if there's an error
+        if (currentUser.role === 'resident') {
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">...</div>
+                    <div class="stat-label">Pending Complaints</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">...</div>
+                    <div class="stat-label">Unpaid Maintenance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">...</div>
+                    <div class="stat-label">New Notices</div>
+                </div>
+            `;
+        } else if (currentUser.role === 'committee') {
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">...</div>
+                    <div class="stat-label">Total Complaints</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">...</div>
+                    <div class="stat-label">Pending Complaints</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">...</div>
+                    <div class="stat-label">Total Residents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">...</div>
+                    <div class="stat-label">Unpaid Maintenance</div>
+                </div>
+            `;
+        }
+    }
+}
+
+// Placeholder functions for loading actual stats (you can implement these later)
+async function loadResidentQuickStats() {
+    // Implement AJAX call to get resident-specific stats
+    // For now, using placeholder values
+    document.getElementById('pending-complaints').textContent = '...';
+    document.getElementById('unpaid-maintenance').textContent = '...';
+    document.getElementById('new-notices').textContent = '...';
+}
+
+async function loadCommitteeQuickStats() {
+    // Implement AJAX call to get committee stats
+    // For now, using placeholder values
+    document.getElementById('total-complaints').textContent = '...';
+    document.getElementById('pending-complaints').textContent = '...';
+    document.getElementById('total-residents').textContent = '...';
+}
+//##########---HOME_END---####################### 
+
 
 //##########---NOTICE_START---#####################
 // Render notices
@@ -1124,11 +1668,6 @@ async function loadNoticesForResident() {
     const container = document.getElementById('notices-container');
     container.innerHTML = '<p>Loading notices...</p>';
     
-    //const notices = await fetchNotices();
-    //renderNotices(notices, false);
-    // Fetch pre-rendered HTML from server
-    //const response = await fetch('code.php?action=get_notices');
-    //container.innerHTML = await response.text();
     try {
         const response = await fetch('code.php?action=get_notices');
         container.innerHTML = await response.text();
@@ -1141,11 +1680,6 @@ async function loadNoticesForCommittee() {
     const container = document.getElementById('committee-notices-container');
     container.innerHTML = '<p>Loading notices...</p>';
     
-    //const notices = await fetchNotices();
-    //renderNotices(notices, true);
-    // Fetch pre-rendered HTML from server
-    //const response = await fetch('code.php?action=get_notices');
-    //container.innerHTML = await response.text();
     try {
         const response = await fetch('code.php?action=get_notices');
         container.innerHTML = await response.text();
@@ -1332,30 +1866,6 @@ async function loadCommitteeComplaints() {
 
 // Update complaint status
 async function updateComplaintStatus(complaintId, status) {
-/*
-    const formData = new FormData();
-    formData.append('action', 'update_complaint_status');
-    formData.append('complaint_id', complaintId);
-    formData.append('status', status);
-    
-    try {
-        const response = await fetch('code.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (response.ok) {
-            alert('Complaint status updated successfully');
-            loadCommitteeComplaints(); // Reload the complaints
-        } else {
-            alert('Error updating complaint status');
-        }
-    } catch (error) {
-        alert('Error updating complaint status');
-    }
-*/
-
-
 
 const formData = new FormData();
     formData.append('action', 'update_complaint_status');
@@ -1443,52 +1953,6 @@ async function loadCommitteeMaintenance(userId) {
         document.getElementById('committee-maintenance-table-body').innerHTML = '<tr><td colspan="13">Error loading maintenance data</td></tr>';
     }
 }
-/*
-async function loadCommitteeMaintenance(userId) {
-    try {
-        const response = await fetch(`code.php?action=get_resident_maintenance_for_committee&user_id=${userId}`);
-        
-        if (response.ok) {
-            document.getElementById('committee-maintenance-table-body').innerHTML = await response.text();
-            
-            // Clear previous changes
-            maintenanceChanges = [];
-            
-            // Add event listeners for dropdowns
-            document.querySelectorAll('.maintenance-select').forEach(select => {
-                select.addEventListener('change', function() {
-                    const changeData = {
-                        residentId: this.dataset.residentId,
-                        year: this.dataset.year,
-                        month: this.dataset.month,
-                        type: this.dataset.type,
-                        status: this.value,
-                        element: this
-                    };
-                    
-                    // Remove existing change for same field if exists
-                    maintenanceChanges = maintenanceChanges.filter(change => 
-                        !(change.residentId === changeData.residentId &&
-                          change.year === changeData.year &&
-                          change.month === changeData.month &&
-                          change.type === changeData.type)
-                    );
-                    
-                    // Add new change
-                    maintenanceChanges.push(changeData);
-                    
-                    // Highlight changed field
-                    this.style.backgroundColor = '#fff9c4';
-                });
-            });
-        } else {
-            document.getElementById('committee-maintenance-table-body').innerHTML = '<tr><td colspan="13">Error loading maintenance data</td></tr>';
-        }
-    } catch (error) {
-        document.getElementById('committee-maintenance-table-body').innerHTML = '<tr><td colspan="13">Error loading maintenance data</td></tr>';
-    }
-}
-    */
 
 // Load committee maintenance interface
 async function loadCommitteeMaintenanceInterface() {
@@ -1582,7 +2046,7 @@ async function renderResidentSelector() {
         await loadCommitteeMaintenance(residents[0].value);
     }
 }
-// Save all maintenance changes
+
 // Save all maintenance changes
 async function saveAllMaintenanceChanges() {
     if (maintenanceChanges.length === 0) {
@@ -1629,83 +2093,7 @@ async function saveAllMaintenanceChanges() {
         alert('Error saving changes: ' + error.message);
     }
 }
-/*
-function saveAllMaintenanceChanges() {
-  if (maintenanceChanges.length === 0) {
-        alert('No changes to save.');
-        return;
-    }
-    
-    // Create a form for each change and submit them sequentially
-    let currentIndex = 0;
-    
-    function submitNextChange() {
-        if (currentIndex >= maintenanceChanges.length) {
-            alert('All changes saved successfully!');
-            // Reload current resident's data
-            const selectedResidentId = document.getElementById('committee-resident-select').value;
-            if (selectedResidentId) {
-                loadCommitteeMaintenance(selectedResidentId);
-            }
-            return;
-        }
-        
-        const change = maintenanceChanges[currentIndex];
-        
-        // Create a hidden form and submit it
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = 'code.php';
-        form.style.display = 'none';
-        
-        const actionInput = document.createElement('input');
-        actionInput.type = 'hidden';
-        actionInput.name = 'action';
-        actionInput.value = 'update_maintenance_status';
-        form.appendChild(actionInput);
-        
-        const residentInput = document.createElement('input');
-        residentInput.type = 'hidden';
-        residentInput.name = 'resident_id';
-        residentInput.value = change.residentId;
-        form.appendChild(residentInput);
-        
-        const yearInput = document.createElement('input');
-        yearInput.type = 'hidden';
-        yearInput.name = 'year';
-        yearInput.value = change.year;
-        form.appendChild(yearInput);
-        
-        const monthInput = document.createElement('input');
-        monthInput.type = 'hidden';
-        monthInput.name = 'month';
-        monthInput.value = change.month;
-        form.appendChild(monthInput);
-        
-        const typeInput = document.createElement('input');
-        typeInput.type = 'hidden';
-        typeInput.name = 'type';
-        typeInput.value = change.type;
-        form.appendChild(typeInput);
-        
-        const statusInput = document.createElement('input');
-        statusInput.type = 'hidden';
-        statusInput.name = 'status';
-        statusInput.value = change.status;
-        form.appendChild(statusInput);
-        
-        document.body.appendChild(form);
-        form.submit();
-        
-        currentIndex++;
-        
-        // Add a small delay between submissions to avoid server overload
-        setTimeout(submitNextChange, 100);
-    }
-    
-    submitNextChange();
-}
-    */
+
 async function updateMaintenanceStatus(residentId, year, month, type, status) { // Changed to residentId
 const formData = new FormData();
     formData.append('action', 'update_maintenance_status');
@@ -1721,7 +2109,6 @@ const formData = new FormData();
             body: formData
         });
         
-        // Since we're not using JSON, check if response is OK
         return response.ok;
     } catch (error) {
         console.error('Error updating maintenance status:', error);

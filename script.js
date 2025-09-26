@@ -1,0 +1,970 @@
+// Shows a tab by id, hides others and highlights appropriate button
+  function showTab(tabId) {
+    // Hide all tabs
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));    
+    // Show selected tab
+    const tab = document.getElementById(tabId);
+    if (tab) {
+        tab.classList.add('active');
+    }
+    
+    // Update button active status
+    document.querySelectorAll('.tab-buttons button').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.id === `tab-${tabId}-btn`) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Add committee class to body if user is committee
+    if (currentUser && currentUser.role === 'committee') {
+        document.body.classList.add('committee-user');
+    } else {
+        document.body.classList.remove('committee-user');
+    }
+    
+    // Additional logic for loading content based on the tab
+    if (currentUser) {
+        if (tabId === 'maintenance' && currentUser.role === 'resident') {
+            loadMaintenanceData();
+        } else if (tabId === 'committee-maintenance' && currentUser.role === 'committee') {
+            loadCommitteeMaintenanceInterface();
+        } else if (tabId === 'notices' && currentUser.role === 'resident') {
+            loadNoticesForResident();
+        } else if (tabId === 'gallery' && currentUser.role === 'resident') {
+            loadGalleryPhotos(false);
+        } else if (tabId === 'complaints' && currentUser.role === 'resident') {
+            loadResidentComplaints();
+        } else if (tabId === 'committee-notices' && currentUser.role === 'committee') {
+            loadNoticesForCommittee();
+        } else if (tabId === 'committee-gallery' && currentUser.role === 'committee') {
+            loadGalleryPhotos(true);
+        } else if (tabId === 'committee-complaints' && currentUser.role === 'committee') {
+            loadCommitteeComplaints();
+        }
+    }
+}
+  // Remove the onsubmit handlers from your forms and let them submit normally
+// Just keep the form validation
+// At the start of your script, check for URL parameters
+document.addEventListener('DOMContentLoaded', function() {
+    showTab('login');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    const success = urlParams.get('success');
+    const tab = urlParams.get('tab');
+    
+    if (tab === 'login') {
+        //document.getElementById('login-error').textContent = error;
+        showTab('login');
+    } else if (tab === 'create-account') {
+        // document.getElementById('signin-error').textContent = error;
+        showTab('create-account');
+    }
+    
+    if (success) {
+        alert(success);
+    }
+    
+    // Check PHP session for logged in user
+    <?php if (isset($_SESSION['user'])): ?>
+        currentUser = {
+            user_id: '<?php echo $_SESSION['user']['user_id']; ?>',
+            name: '<?php echo $_SESSION['user']['name']; ?>',
+            role: '<?php echo $_SESSION['user']['role']; ?>'
+        };
+        renderTabButtons(currentUser.role);
+        // Show appropriate default tab based on role
+      if (currentUser.role === 'resident') {
+        showTab('notices');
+      } else if (currentUser.role === 'committee') {
+        document.body.classList.add('committee-user');
+        showTab('committee-notices');
+      }
+    <?php else: ?>
+      renderTabButtons('guest');
+    <?php endif; ?>
+});
+    
+// Email validation
+const emailField = document.getElementById('signin-email');
+const emailError = document.getElementById('email-error');
+const emailPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+        
+emailField.addEventListener('blur', function() {
+const email = emailField.value;
+//const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+if (email && !emailPattern.test(email)) {
+    emailError.style.display = 'block';
+    emailField.style.borderColor = '#e74c3c';
+    } else {
+        emailError.style.display = 'none';
+        emailField.style.borderColor = '#ddd';
+    }
+});
+        
+// Form validation before submission
+document.getElementById('signin-form').addEventListener('submit', function(event) {
+    const email = emailField.value;
+    //const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+    if (!emailPattern.test(email)) {
+        event.preventDefault();
+        emailError.style.display = 'block';
+        emailField.style.borderColor = '#e74c3c';
+        emailField.focus();
+        }
+});
+
+// Add validation for building and room format
+document.getElementById('signin-building').addEventListener('blur', function() {
+    const building = this.value;
+    const pattern = /^[A-Z]-[0-9]{2}$/;
+    
+    if (building && !pattern.test(building)) {
+        this.style.borderColor = '#e74c3c';
+        alert('Valid building number format: C-Building number (e.g., C-00)');
+    } else {
+        this.style.borderColor = '#ddd';
+    }
+});
+
+document.getElementById('signin-room').addEventListener('blur', function() {
+    const room = this.value;
+    const pattern = /^[0-9]{1,2}\/[0-9]{2}$/;
+    
+    if (room && !pattern.test(room)) {
+        this.style.borderColor = '#e74c3c';
+        alert('Valid room number format: Floor number/Room number (e.g., 0/00)');
+    } else {
+        this.style.borderColor = '#ddd';
+    }
+});
+
+// Update form validation to include building and room
+document.getElementById('signin-form').addEventListener('submit', function(event) {
+    const building = document.getElementById('signin-building').value;
+    const room = document.getElementById('signin-room').value;
+    const buildingPattern = /^[A-Z]-[0-9]{2}$/;
+    const roomPattern = /^[0-9]{1,2}\/[0-9]{2}$/;
+    
+    if (!buildingPattern.test(building)) {
+        event.preventDefault();
+        alert('Valid building number format: C-Building number (e.g., C-00)');
+        document.getElementById('signin-building').focus();
+        return;
+    }
+    
+    if (!roomPattern.test(room)) {
+        event.preventDefault();
+        alert('Valid room number format: Floor number/Room number (e.g., 0/00)');
+        document.getElementById('signin-room').focus();
+        return;
+    }
+});
+
+// Modify your logout function
+function logout() {
+    window.location.href = 'code.php?action=logout';
+}
+  
+  let currentUser = null;
+
+  // Tab definitions for roles
+  const tabsForResident = [
+    { id: 'notices', label: 'Notices' },
+    { id: 'gallery', label: 'Gallery' },
+    { id: 'complaints', label: 'Complaints' },
+    { id: 'maintenance', label: 'Maintenance' }
+];
+
+const tabsForCommittee = [
+    { id: 'committee-notices', label: 'Notices' },
+    { id: 'committee-gallery', label: 'Gallery' },
+    { id: 'committee-complaints', label: 'Complaints' },
+    { id: 'committee-maintenance', label: 'Maintenance' }
+];
+
+  // Sample maintenance data for multiple residents
+  /*let maintenanceData = {
+    resident1: {
+      maintenance: ['-','-','-','-','-','-','-','-','-','-','-','-'],
+      parking: ['-','-','-','-','-','-','-','-','-','-','-','-']
+    },
+    resident2: {
+      maintenance: ['-','-','-','-','-','-','-','-','-','-','-','-'],
+      parking: ['-','-','-','-','-','-','-','-','-','-','-','-']
+    }
+  };*/
+
+  // Data storage for notices, gallery and complaints
+  let notices = [];
+  let galleryPhotos = [];
+  let complaints = [];
+  let maintenanceChanges = [];
+
+  // Renders tab buttons as per current role or guest (home, login)
+  function renderTabButtons(role = 'guest') {
+    const tabButtonsDiv = document.querySelector('.tab-buttons');
+    tabButtonsDiv.innerHTML = ''; // Clear buttons
+
+    if (role === 'guest') {
+      // Guest tabs: home and login
+      createTabButton('login', 'LOGIN');
+      showTab('login');
+    } else if (role === 'resident') {
+      tabsForResident.forEach(tab => createTabButton(tab.id, tab.label));
+      showTab(tabsForResident[0].id);
+    } else if (role === 'committee') {
+      tabsForCommittee.forEach(tab => createTabButton(tab.id, tab.label));
+      showTab(tabsForCommittee[0].id);
+    }
+  }
+
+  // Helper to create a tab button
+  function createTabButton(tabId, label) {
+    const tabButtonsDiv = document.querySelector('.tab-buttons');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = `tab-${tabId}-btn`;
+    // Add logo
+    const logo = document.createElement('img');
+    logo.className = 'tab-logo';
+    // Add Label Span
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'tab-label';
+    labelSpan.textContent = ' ' + label;
+
+    // Add logo for Notices tab
+  if (label === 'Notices' || tabId === 'committee-notices') {
+    logo.src = 'NoticeLogo.png'; // Use the same logo as your header
+    logo.alt = 'Notices Tab Logo';
+  }
+  else if (label === 'Gallery' || tabId === 'committee-gallery') {
+    logo.src = 'GalleryLogo.png'; // Use the same logo as your header
+    logo.alt = 'Gallery Tab Logo';
+  }
+  else if (label === 'Complaints' || tabId === 'committee-complaints') {
+    logo.src = 'ComplaintLogo.png'; // Use the same logo as your header
+    logo.alt = 'Complaints Tab Logo';
+  }
+  else if (label === 'Maintenance') {
+    logo.src = 'MaintenanceLogo.png'; // Use the same logo as your header
+    logo.alt = 'Maintenance Tab Logo';
+  }
+    //btn.textContent = label;
+    btn.appendChild(logo);
+    btn.appendChild(labelSpan);
+    btn.onclick = () => showTab(tabId);
+    tabButtonsDiv.appendChild(btn);
+  }
+
+//##########---NOTICE_START---#####################
+// Render notices
+function renderNotices(notices, isCommittee = false) {
+    const container = document.getElementById(isCommittee ? 'committee-notices-container' : 'notices-container');
+    
+    if (!notices || notices.length === 0) {
+        container.innerHTML = '<p>No notices found.</p>';
+        return;
+    }
+    
+    let html = `
+    <div class="table-responsive">
+        <table class="notice-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>File Name</th>
+                    <th>Size</th>
+                    <th>Uploaded By</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    notices.forEach(notice => {
+        // Format file size
+        let fileSize = notice.file_size;
+        let sizeText = '';
+        if (fileSize >= 1048576) {
+            sizeText = (fileSize / 1048576).toFixed(2) + ' MB';
+        } else if (fileSize >= 1024) {
+            sizeText = (fileSize / 1024).toFixed(2) + ' KB';
+        } else {
+            sizeText = fileSize + ' bytes';
+        }
+        
+        // Format date
+        const date = new Date(notice.created_at);
+        const formattedDate = date.toLocaleDateString('en-US', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        html += `
+            <tr>
+                
+                <td>${notice.title}</td>
+                <td>${notice.file_name}</td>
+                <td>${sizeText}</td>
+                <td>${notice.uploaded_by_name}</td>
+                <td>${formattedDate}</td>
+                <td class="actions">
+                    <a href="code.php?action=view_notice&id=${notice.notice_id}" target="_blank" class="view-btn">View</a>
+                    ${isCommittee ? `<button onclick="deleteNotice(${notice.notice_id})" class="delete-btn">Delete</button>` : ''}
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+     </div>
+    `;
+    
+    container.innerHTML = html;
+ }
+// Update the loadNoticesForResident and loadNoticesForCommittee functions:
+async function loadNoticesForResident() {
+    const container = document.getElementById('notices-container');
+    container.innerHTML = '<p>Loading notices...</p>';
+    
+    //const notices = await fetchNotices();
+    //renderNotices(notices, false);
+    // Fetch pre-rendered HTML from server
+    //const response = await fetch('code.php?action=get_notices');
+    //container.innerHTML = await response.text();
+    try {
+        const response = await fetch('code.php?action=get_notices');
+        container.innerHTML = await response.text();
+    } catch (error) {
+        container.innerHTML = '<p class="error-msg">Error loading notices</p>';
+    }
+}
+
+async function loadNoticesForCommittee() {
+    const container = document.getElementById('committee-notices-container');
+    container.innerHTML = '<p>Loading notices...</p>';
+    
+    //const notices = await fetchNotices();
+    //renderNotices(notices, true);
+    // Fetch pre-rendered HTML from server
+    //const response = await fetch('code.php?action=get_notices');
+    //container.innerHTML = await response.text();
+    try {
+        const response = await fetch('code.php?action=get_notices');
+        container.innerHTML = await response.text();
+    } catch (error) {
+        container.innerHTML = '<p class="error-msg">Error loading notices</p>';
+    }
+}
+
+// Delete notice function
+function deleteNotice(noticeId) {
+    if (confirm('Are you sure you want to delete this notice?')) {
+        window.location.href = 'code.php?action=delete_notice&id=' + noticeId;
+    }
+}
+
+//##########---NOTICE_END---#################
+
+//##########---GALLERY_START---##############
+// Load gallery photos
+async function loadGalleryPhotos(isCommittee = false) {
+    const container = document.getElementById(isCommittee ? 'committee-gallery-container' : 'gallery-container');
+    container.innerHTML = '<p>Loading photos...</p>';
+    
+    try {
+        const response = await fetch('code.php?action=get_gallery_photos');
+        container.innerHTML = await response.text();
+        
+        // Add event listeners for editable titles if committee
+        if (isCommittee) {
+            setupEditableTitles();
+        }
+    } catch (error) {
+        container.innerHTML = '<p class="error-msg">Error loading photos</p>';
+    }
+}
+
+// Setup editable titles for committee
+function setupEditableTitles() {
+    const editableTitles = document.querySelectorAll('.editable-title');
+    
+    editableTitles.forEach(container => {
+        const textSpan = container.querySelector('.title-text');
+        const editInput = container.querySelector('.title-edit');
+        
+        textSpan.addEventListener('click', () => {
+            textSpan.style.display = 'none';
+            editInput.style.display = 'block';
+            editInput.focus();
+        });
+        
+        editInput.addEventListener('blur', () => {
+            saveTitleChange(container);
+        });
+        
+        editInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveTitleChange(container);
+            } else if (e.key === 'Escape') {
+                editInput.value = textSpan.textContent;
+                editInput.style.display = 'none';
+                textSpan.style.display = 'inline';
+            }
+        });
+    });
+}
+
+// Save title change
+async function saveTitleChange(container) {
+    const textSpan = container.querySelector('.title-text');
+    const editInput = container.querySelector('.title-edit');
+    const photoId = container.dataset.id;
+    const newTitle = editInput.value.trim();
+    
+    if (newTitle === textSpan.textContent || newTitle === '') {
+        editInput.style.display = 'none';
+        textSpan.style.display = 'inline';
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'update_photo_title');
+        formData.append('id', photoId);
+        formData.append('title', newTitle);
+        
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            textSpan.textContent = newTitle;
+            editInput.style.display = 'none';
+            textSpan.style.display = 'inline';
+        } else {
+            alert('Error: ' + result.message);
+            editInput.value = textSpan.textContent;
+            editInput.style.display = 'none';
+            textSpan.style.display = 'inline';
+        }
+    } catch (error) {
+        alert('Error updating title');
+        editInput.value = textSpan.textContent;
+        editInput.style.display = 'none';
+        textSpan.style.display = 'inline';
+    }
+}
+
+// Delete photo
+function deletePhoto(photoId) {
+    if (confirm('Are you sure you want to delete this photo?')) {
+        window.location.href = 'code.php?action=delete_photo&id=' + photoId;
+    }
+}
+
+// Handle photo upload
+async function uploadPhoto(event) {
+    event.preventDefault();
+    const messageElem = document.getElementById('photo-message');
+    messageElem.textContent = '';
+    
+    const title = document.getElementById('photo-title').value.trim();
+    const fileInput = document.getElementById('photo');
+
+    if (!title || fileInput.files.length === 0) {
+        messageElem.textContent = 'Please fill all fields and select a photo.';
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('action', 'upload_photo');
+    formData.append('title', title);
+    formData.append('photo', fileInput.files[0]);
+    
+    try {
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            alert('Photo uploaded successfully');
+            document.getElementById('upload-photo-form').reset();
+            loadGalleryPhotos(true); // Reload gallery for committee
+        } else {
+            messageElem.textContent = 'Error uploading photo';
+        }
+    } catch (error) {
+        messageElem.textContent = 'Error uploading photo';
+    }
+}
+//##########---GALLERY_END---#################
+
+//##########---COMPLAINT_START---##########
+
+// Load complaints for resident
+async function loadResidentComplaints() {
+    try {
+        const response = await fetch('code.php?action=get_resident_complaints');
+        document.getElementById('complaints-table-body').innerHTML = await response.text();
+    } catch (error) {
+        document.getElementById('complaints-table-body').innerHTML = '<tr><td colspan="3">Error loading complaints</td></tr>';
+    }
+}
+
+// Load all complaints for committee
+async function loadCommitteeComplaints() {
+    try {
+        const response = await fetch('code.php?action=get_all_complaints');
+        document.getElementById('committee-complaints-table-body').innerHTML = await response.text();
+        
+        // Add event listeners for status dropdowns
+        document.querySelectorAll('.status-select').forEach(select => {
+            select.addEventListener('change', function() {
+                updateComplaintStatus(this.dataset.complaintId, this.value);
+            });
+        });
+    } catch (error) {
+        document.getElementById('committee-complaints-table-body').innerHTML = '<tr><td colspan="5">Error loading complaints</td></tr>';
+    }
+}
+
+// Update complaint status
+async function updateComplaintStatus(complaintId, status) {
+/*
+    const formData = new FormData();
+    formData.append('action', 'update_complaint_status');
+    formData.append('complaint_id', complaintId);
+    formData.append('status', status);
+    
+    try {
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            alert('Complaint status updated successfully');
+            loadCommitteeComplaints(); // Reload the complaints
+        } else {
+            alert('Error updating complaint status');
+        }
+    } catch (error) {
+        alert('Error updating complaint status');
+    }
+*/
+
+
+
+const formData = new FormData();
+    formData.append('action', 'update_complaint_status');
+    formData.append('complaint_id', complaintId);
+    formData.append('status', status);
+    
+    try {
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            loadCommitteeComplaints(); // Reload the complaints
+        }
+    } catch (error) {
+        alert('Error updating complaint status');
+    }
+}
+//#########---COMPLAINY_END---###########
+
+//##########---MAINTENANCE_START---###########
+async function loadMaintenanceData() {
+    if (currentUser.role === 'resident') {
+        renderResidentIdDisplay(currentUser.user_id);
+        await loadResidentMaintenance();
+    } else if (currentUser.role === 'committee') {
+        await loadCommitteeMaintenanceInterface();
+    }
+}
+
+// Load maintenance for resident
+async function loadResidentMaintenance() {
+    try {
+        const response = await fetch('code.php?action=get_resident_maintenance');
+        document.getElementById('maintenance-table-body').innerHTML = await response.text();
+    } catch (error) {
+        document.getElementById('maintenance-table-body').innerHTML = '<tr><td colspan="13">Error loading maintenance data</td></tr>';
+    }
+}
+// Load maintenance for committee
+async function loadCommitteeMaintenance(userId) {
+    try {
+        const response = await fetch(`code.php?action=get_resident_maintenance_for_committee&user_id=${userId}`);
+        
+        if (response.ok) {
+            document.getElementById('committee-maintenance-table-body').innerHTML = await response.text();
+            
+            // Clear previous changes
+            maintenanceChanges = [];
+            
+            // Add event listeners for dropdowns
+            document.querySelectorAll('.maintenance-select').forEach(select => {
+                select.addEventListener('change', function() {
+                    const changeData = {
+                        residentId: this.dataset.residentId,
+                        year: this.dataset.year,
+                        month: this.dataset.month,
+                        type: this.dataset.type,
+                        status: this.value,
+                        element: this
+                    };
+                    
+                    // Remove existing change for same field if exists
+                    maintenanceChanges = maintenanceChanges.filter(change => 
+                        !(change.residentId === changeData.residentId &&
+                          change.year === changeData.year &&
+                          change.month === changeData.month &&
+                          change.type === changeData.type)
+                    );
+                    
+                    // Add new change
+                    maintenanceChanges.push(changeData);
+                    
+                    // Highlight changed field
+                    this.style.backgroundColor = '#fff9c4';
+                });
+            });
+        } else {
+            document.getElementById('committee-maintenance-table-body').innerHTML = '<tr><td colspan="13">Error loading maintenance data</td></tr>';
+        }
+    } catch (error) {
+        document.getElementById('committee-maintenance-table-body').innerHTML = '<tr><td colspan="13">Error loading maintenance data</td></tr>';
+    }
+}
+/*
+async function loadCommitteeMaintenance(userId) {
+    try {
+        const response = await fetch(`code.php?action=get_resident_maintenance_for_committee&user_id=${userId}`);
+        
+        if (response.ok) {
+            document.getElementById('committee-maintenance-table-body').innerHTML = await response.text();
+            
+            // Clear previous changes
+            maintenanceChanges = [];
+            
+            // Add event listeners for dropdowns
+            document.querySelectorAll('.maintenance-select').forEach(select => {
+                select.addEventListener('change', function() {
+                    const changeData = {
+                        residentId: this.dataset.residentId,
+                        year: this.dataset.year,
+                        month: this.dataset.month,
+                        type: this.dataset.type,
+                        status: this.value,
+                        element: this
+                    };
+                    
+                    // Remove existing change for same field if exists
+                    maintenanceChanges = maintenanceChanges.filter(change => 
+                        !(change.residentId === changeData.residentId &&
+                          change.year === changeData.year &&
+                          change.month === changeData.month &&
+                          change.type === changeData.type)
+                    );
+                    
+                    // Add new change
+                    maintenanceChanges.push(changeData);
+                    
+                    // Highlight changed field
+                    this.style.backgroundColor = '#fff9c4';
+                });
+            });
+        } else {
+            document.getElementById('committee-maintenance-table-body').innerHTML = '<tr><td colspan="13">Error loading maintenance data</td></tr>';
+        }
+    } catch (error) {
+        document.getElementById('committee-maintenance-table-body').innerHTML = '<tr><td colspan="13">Error loading maintenance data</td></tr>';
+    }
+}
+    */
+
+// Load committee maintenance interface
+async function loadCommitteeMaintenanceInterface() {
+    try {
+        // Load residents list
+        const response = await fetch('code.php?action=get_all_residents');
+        const residentSelect = document.getElementById('committee-resident-select');
+        
+        if (response.ok) {
+            residentSelect.innerHTML = '<option value="">Select Resident</option>' + await response.text();
+        } else {
+            residentSelect.innerHTML = '<option value="">Error loading residents</option>';
+        }
+        
+        // Add event listener for resident selection
+        residentSelect.addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('selected-resident-id').value = this.value;
+                loadCommitteeMaintenance(this.value);
+            } else {
+                document.getElementById('committee-maintenance-table-body').innerHTML = '<tr><td colspan="13">Please select a resident</td></tr>';
+            }
+        });
+        
+        // Clear table initially
+        document.getElementById('committee-maintenance-table-body').innerHTML = '<tr><td colspan="13">Please select a resident</td></tr>';
+        
+    } catch (error) {
+        document.getElementById('committee-resident-select').innerHTML = '<option value="">Error loading residents</option>';
+    }
+}
+
+// Get all residents for committee dropdown
+async function getAllResidents() {
+   try {
+        const response = await fetch('code.php?action=get_all_residents');
+        const optionsHtml = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(optionsHtml, 'text/html');
+        return Array.from(doc.querySelectorAll('option')).map(option => ({
+            value: option.value,
+            text: option.textContent
+        }));
+    } catch (error) {
+        return [];
+    }
+}
+
+// Render resident selector for committee
+async function renderResidentSelector() {
+   const selectorDiv = document.getElementById('resident-selector');
+    selectorDiv.innerHTML = '';
+    
+    const label = document.createElement('label');
+    label.textContent = 'Select Resident:';
+    label.htmlFor = 'resident-select';
+    selectorDiv.appendChild(label);
+    
+    const select = document.createElement('select');
+    select.id = 'resident-select';
+    select.style.marginLeft = '10px';
+    select.style.padding = '5px';
+    
+    // Add loading option initially
+    const loadingOption = document.createElement('option');
+    loadingOption.value = '';
+    loadingOption.textContent = 'Loading...';
+    select.appendChild(loadingOption);
+    
+    selectorDiv.appendChild(select);
+    
+    // Load residents
+    const residents = await getAllResidents();
+    
+    // Clear loading option and add actual residents
+    select.innerHTML = '';
+    residents.forEach(resident => {
+        const option = document.createElement('option');
+        option.value = resident.value;
+        option.textContent = resident.text;
+        select.appendChild(option);
+    });
+    
+    // Add event listener
+    select.addEventListener('change', async () => {
+        await loadCommitteeMaintenance(select.value);
+    });
+    
+    // Load maintenance for first resident by default
+    if (residents.length > 0) {
+        await loadCommitteeMaintenance(residents[0].value);
+    }
+}
+// Save all maintenance changes
+// Save all maintenance changes
+async function saveAllMaintenanceChanges() {
+    if (maintenanceChanges.length === 0) {
+        alert('No changes to save.');
+        return;
+    }
+    
+    try {
+        // Submit all changes via fetch API
+        for (let i = 0; i < maintenanceChanges.length; i++) {
+            const change = maintenanceChanges[i];
+            
+            const formData = new FormData();
+            formData.append('action', 'update_maintenance_status');
+            formData.append('resident_id', change.residentId);
+            formData.append('year', change.year);
+            formData.append('month', change.month);
+            formData.append('type', change.type);
+            formData.append('status', change.status);
+            
+            const response = await fetch('code.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to update maintenance status');
+            }
+            
+            // Reset background color
+            change.element.style.backgroundColor = '';
+        }
+        
+        alert('All changes saved successfully!');
+        maintenanceChanges = []; // Clear changes array
+        
+        // Reload current resident's data
+        const selectedResidentId = document.getElementById('committee-resident-select').value;
+        if (selectedResidentId) {
+            loadCommitteeMaintenance(selectedResidentId);
+        }
+        
+    } catch (error) {
+        alert('Error saving changes: ' + error.message);
+    }
+}
+/*
+function saveAllMaintenanceChanges() {
+  if (maintenanceChanges.length === 0) {
+        alert('No changes to save.');
+        return;
+    }
+    
+    // Create a form for each change and submit them sequentially
+    let currentIndex = 0;
+    
+    function submitNextChange() {
+        if (currentIndex >= maintenanceChanges.length) {
+            alert('All changes saved successfully!');
+            // Reload current resident's data
+            const selectedResidentId = document.getElementById('committee-resident-select').value;
+            if (selectedResidentId) {
+                loadCommitteeMaintenance(selectedResidentId);
+            }
+            return;
+        }
+        
+        const change = maintenanceChanges[currentIndex];
+        
+        // Create a hidden form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'code.php';
+        form.style.display = 'none';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'update_maintenance_status';
+        form.appendChild(actionInput);
+        
+        const residentInput = document.createElement('input');
+        residentInput.type = 'hidden';
+        residentInput.name = 'resident_id';
+        residentInput.value = change.residentId;
+        form.appendChild(residentInput);
+        
+        const yearInput = document.createElement('input');
+        yearInput.type = 'hidden';
+        yearInput.name = 'year';
+        yearInput.value = change.year;
+        form.appendChild(yearInput);
+        
+        const monthInput = document.createElement('input');
+        monthInput.type = 'hidden';
+        monthInput.name = 'month';
+        monthInput.value = change.month;
+        form.appendChild(monthInput);
+        
+        const typeInput = document.createElement('input');
+        typeInput.type = 'hidden';
+        typeInput.name = 'type';
+        typeInput.value = change.type;
+        form.appendChild(typeInput);
+        
+        const statusInput = document.createElement('input');
+        statusInput.type = 'hidden';
+        statusInput.name = 'status';
+        statusInput.value = change.status;
+        form.appendChild(statusInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+        
+        currentIndex++;
+        
+        // Add a small delay between submissions to avoid server overload
+        setTimeout(submitNextChange, 100);
+    }
+    
+    submitNextChange();
+}
+    */
+async function updateMaintenanceStatus(residentId, year, month, type, status) { // Changed to residentId
+const formData = new FormData();
+    formData.append('action', 'update_maintenance_status');
+    formData.append('resident_id', residentId);
+    formData.append('year', year);
+    formData.append('month', month);
+    formData.append('type', type);
+    formData.append('status', status);
+    
+    try {
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        // Since we're not using JSON, check if response is OK
+        return response.ok;
+    } catch (error) {
+        console.error('Error updating maintenance status:', error);
+        return false;
+    }
+}
+
+// Display resident ID above the table for residents
+function renderResidentIdDisplay(userId) {
+    const displayDiv = document.getElementById('resident-id-display');
+    displayDiv.textContent = `Resident ID: ${userId}`;
+}
+
+// Clear resident ID display (for committee)
+function clearResidentIdDisplay() {
+    const displayDiv = document.getElementById('resident-id-display');
+    displayDiv.textContent = '';
+}
+
+// Clear resident selector (for residents)
+function clearResidentSelector() {
+    const selectorDiv = document.getElementById('resident-selector');
+    selectorDiv.innerHTML = '';
+}
+//###########---MAINTENANCE_END---###########
+
+ function showCreateAccountForm() {
+    renderTabButtons('guest');
+    showTab('create-account');
+  }
+  // Initialize the application by rendering the guest view
+  renderTabButtons('guest');

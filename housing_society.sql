@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 18, 2025 at 06:25 PM
+-- Generation Time: Sep 26, 2025 at 06:17 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -86,26 +86,27 @@ CREATE TABLE `maintenance` (
   `status` enum('no','paid','unpaid') NOT NULL DEFAULT 'no',
   `resident_id` varchar(50) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_by` varchar(50) NOT NULL
+  `updated_by` varchar(50) NOT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `maintenance`
 --
 
-INSERT INTO `maintenance` (`record_id`, `type`, `month`, `year`, `status`, `resident_id`, `created_at`, `updated_by`) VALUES
-(1, 'maintenance', 4, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(2, 'maintenance', 5, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(3, 'maintenance', 6, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(4, 'maintenance', 7, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(5, 'maintenance', 8, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(6, 'maintenance', 9, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(7, 'parking', 5, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(8, 'parking', 6, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(9, 'parking', 7, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(10, 'parking', 8, 2025, 'unpaid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(11, 'parking', 9, 2025, 'unpaid', 'C49210', '2025-09-13 16:21:57', 'C52108'),
-(12, 'parking', 4, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108');
+INSERT INTO `maintenance` (`record_id`, `type`, `month`, `year`, `status`, `resident_id`, `created_at`, `updated_by`, `updated_at`) VALUES
+(1, 'maintenance', 4, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(2, 'maintenance', 5, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(3, 'maintenance', 6, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(4, 'maintenance', 7, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(5, 'maintenance', 8, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(6, 'maintenance', 9, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(7, 'parking', 5, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(8, 'parking', 6, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(9, 'parking', 7, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(10, 'parking', 8, 2025, 'unpaid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(11, 'parking', 9, 2025, 'unpaid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13'),
+(12, 'parking', 4, 2025, 'paid', 'C49210', '2025-09-13 16:21:57', 'C52108', '2025-09-25 12:41:13');
 
 -- --------------------------------------------------------
 
@@ -159,7 +160,10 @@ INSERT INTO `users` (`user_id`, `name`, `email`, `building`, `room`, `password`,
 ('C49210', 'Manasvi', 'man@gamil.com', 'C-49', '2/10', 'man685', '$2y$10$A9khrkDBvnN7OCwOi2LDbey/PCASy/SwsBQ4R3vzNzUPwi2QKojYq', 'resident', '2025-08-28 16:24:42'),
 ('C50002', 'ADMIN', 'admin2@gmail.com', 'C-50', '0/02', 'admin123', '$2y$10$Bb6.cwfxb1DNyian3.gjn.kKujQv5FAjUlmGj13UgI2KZ7duHwEY6', 'committee', '2025-08-28 16:48:01'),
 ('C52108', 'ADMIN2', 'admin2@gmail.com', 'C-52', '1/08', 'admin234', '$2y$10$Q5lgEFNxozduQj3y3K4tSelh2nWihXWTuJYUAuSgB3njc/MkQdK/S', 'committee', '2025-09-09 16:22:19'),
-('C54106', 'Abc Xyz', 'abc@gmail.com', 'C-54', '1/06', 'abc123', '$2y$10$CUf1ScjSBUvmi9UI9ljInuE0/wNefZ4882YtvyN71/yShEn/Dq6Zi', 'resident', '2025-09-04 13:49:06');
+('C54106', 'Abc Xyz', 'abc@gmail.com', 'C-54', '1/06', 'abc123', '$2y$10$CUf1ScjSBUvmi9UI9ljInuE0/wNefZ4882YtvyN71/yShEn/Dq6Zi', 'resident', '2025-09-04 13:49:06'),
+('CC51212', 'Secretory', 'sec@gmail.com', 'C-51', '2/12', 'sec123', '$2y$10$v8Gug8cuN1JPDHAx5jOjy.7MAw9UIBpRSXhOfDe0knCD7xi9/A/X2', 'committee', '2025-09-26 15:52:54'),
+('RC51212', 'Secretory', 'sec@gmail.com', 'C-51', '2/12', 'sec123', '$2y$10$v8Gug8cuN1JPDHAx5jOjy.7MAw9UIBpRSXhOfDe0knCD7xi9/A/X2', 'resident', '2025-09-26 15:52:54'),
+('RC53311', 'Resident', 'res123@gamil.com', 'C-53', '3/11', 'res123', '$2y$10$kdvEtXCiqgUEmzpULlKELuTA3usLjCqBsbLmcAkjbcc/.N5tGHOBe', 'resident', '2025-09-26 15:55:50');
 
 --
 -- Indexes for dumped tables

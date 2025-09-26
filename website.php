@@ -1482,7 +1482,15 @@ const tabsForCommittee = [
     labelSpan.textContent = ' ' + label;
 
     // Add logo for Notices tab
-  if (label === 'Notices' || tabId === 'committee-notices') {
+  if (label === 'Home') {
+    logo.src = 'HomeLogo.png'; // Use the same logo as your header
+    logo.alt = 'Home Tab Logo';
+  }  
+  else if (label === 'About Us') {
+    logo.src = 'AboutUsLogo.png'; // Use the same logo as your header
+    logo.alt = 'About Us Tab Logo';
+  }
+  else if (label === 'Notices' || tabId === 'committee-notices') {
     logo.src = 'NoticeLogo.png'; // Use the same logo as your header
     logo.alt = 'Notices Tab Logo';
   }

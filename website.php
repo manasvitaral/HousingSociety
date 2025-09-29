@@ -726,7 +726,7 @@ session_start();
     border: 1px solid #6A0DAD; /* Royal Purple */
     border-radius: 3px;
 }
-
+/*##############*/
   /* Responsive */
   @media (max-width: 320px) {
     .tab-buttons button {
@@ -745,9 +745,30 @@ session_start();
       padding: 4px 8px;
       font-size: 0.8rem;
     }
+    .photo-card {
+        flex-direction: row; /* Still horizontal on very small screens */
+    }
+    
+    .photo-card img {
+        width: 130px; /* Very compact image */
+        height: 100px;
+    }
+    
+    .photo-details {
+        padding: 6px;
+    }
+    
+    .photo-title {
+        font-size: 0.9rem;
+        -webkit-line-clamp: 2;
+    }
+    
+    .photo-meta {
+        font-size: 0.7rem;
+    }
   }
  @media (max-width: 480px) {
-      .about-header h2 {
+    .about-header h2 {
         font-size: 1.7rem;
     }
     
@@ -760,12 +781,34 @@ session_start();
     .feature-item {
         padding: 15px;
     }
-      .gallery-container {
-          grid-template-columns: 1fr; /* Single column on mobile */
+    .gallery-container {
+        grid-template-columns: 1fr; /* Single column on mobile */
+        gap: 12px; /* Slightly smaller gap */
       }
-      .photo-card img {
-          height: 180px; /* Taller images on mobile */
+      .photo-card {
+        flex-direction: row; /* Maintain horizontal layout */
+    }
+    .photo-card img {
+        width: 150px; /* Compact image size */
+        height: 120px; height: 180px; /* Taller images on mobile */
       }
+      .photo-details {
+        padding: 8px; /* Compact padding */
+    }
+    
+    .photo-title {
+        font-size: 0.95rem; /* Slightly smaller title */
+        -webkit-line-clamp: 2; /* Maintain 2-line limit */
+        min-height: 2.4em;
+    }
+    
+    .photo-meta {
+        font-size: 0.75rem; /* Smaller meta text */
+    }
+    
+    .photo-actions {
+        gap: 6px; /* Tighter button spacing */
+    }
   }
  @media (max-width: 500px){
    .tab-buttons button span.tab-label {
@@ -773,6 +816,18 @@ session_start();
     }
     .tab-logo {
       margin-right: 0 !important;
+    }
+    .photo-card {
+        flex-direction: row; /* Still horizontal on larger phones */
+    }
+    
+    .photo-card img {
+        width: 180px;
+        height: 140px;
+    }
+    
+    .photo-details {
+        padding: 10px;
     }
   }
  @media (max-width: 768px) {
@@ -804,22 +859,41 @@ session_start();
         text-align: center;
     }
     .photo-card {
-        flex-direction: column; /* Stack vertically on mobile */
+        /* flex-direction: column;  Stack vertically on mobile */
+       flex-direction: row; /* Keep horizontal layout */
     }
     
     .photo-card img {
         width: 100%; /* Full width on mobile */
         height: 200px;
     }
+    .photo-details {
+        padding: 12px; /* Slightly reduced padding */
+    }
     
+    .photo-title {
+        font-size: 1rem; /* Adjust font size */
+    }
+    
+    .photo-meta {
+        font-size: 0.8rem; /* Adjust meta font size */
+    }
     .gallery-container {
         grid-template-columns: 1fr; /* Still 1 column on mobile */
     }
   }
  @media (max-width: 1024px) {
       .gallery-container {
-          grid-template-columns: repeat(3, 1fr); /* 3 columns on medium screens */
+          /* grid-template-columns: repeat(3, 1fr);  3 columns on medium screens */
+            grid-template-columns: 1fr; /* Maintain single column on tablets */
       }
+      .photo-card {
+        flex-direction: row; /* Keep horizontal layout on tablets */
+    }
+    .photo-card img {
+        width: 220px; /* Slightly smaller image on tablets */
+        height: 180px;
+    }
       .committee-user .quick-stats {
         grid-template-columns: repeat(2, 1fr);
     }

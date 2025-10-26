@@ -48,9 +48,11 @@ session_start();
   }
   /* Tab container */
   .tab-container {
-    max-width: 900px;
+    width: 100%;
+    max-width: 100%;
+    /* max-width: 900px; */
     margin: 30px auto 50px;
-    background: white;
+    /* background: white; */
     border-radius: 10px;
     box-shadow: 0 8px 16px rgba(106, 13, 173, 0.1); /* Royal Purple shadow */
     overflow: hidden;
@@ -240,7 +242,8 @@ session_start();
 }
 /* About Tab Specific Styles */
 .about-container {
-    max-width: 1000px;
+    width: 100%;
+    /* max-width: 1000px; */
     margin: 0 auto;
     padding: 0 10px;
 }
@@ -249,7 +252,7 @@ session_start();
     text-align: center;
     margin-bottom: 30px;
     padding: 20px;
-    background: linear-gradient(135deg, #F5F0FA 0%, #E6E6FA 100%);
+    background: linear-gradient(135deg, #F5F0FA 0%, #E6E6FA 100%); 
     border-radius: 10px;
     border-left: 5px solid #6A0DAD;
 }
@@ -399,6 +402,71 @@ session_start();
     font-weight: 500;
     margin-top: 20px;
 }
+
+/* Directory Tab Specific Styles */
+.directory-info {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #F5F0FA;
+    border-radius: 8px;
+    border-left: 4px solid #6A0DAD;
+}
+
+.directory-info p {
+    margin: 0;
+    color: #6A0DAD;
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-active {
+    background: #2ecc71;
+    color: white;
+}
+
+.status-vacant {
+    background: #e74c3c;
+    color: white;
+}
+
+/* Table responsive styles for directory */
+#directory-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#directory-table th,
+#directory-table td {
+    border: 1px solid #B57EDC;
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+#directory-table th {
+    background: #E6E6FA;
+    font-weight: 700;
+    color: #6A0DAD;
+    position: sticky;
+    top: 0;
+}
+
+#directory-table tbody tr:nth-child(even) {
+    background: #F9F6FF;
+}
+
+#directory-table tbody tr:hover {
+    background: #F5F0FA;
+}
+
   /* Forms */
   form {
     display: flex;
@@ -623,6 +691,162 @@ session_start();
     color: #800080; /* Purple */
     font-weight: normal;
   }
+/* Poll Tab Styles */
+.polls-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.poll-card {
+    background: #F5F0FA;
+    border: 1px solid #B57EDC;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.poll-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.poll-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #6A0DAD;
+    margin: 0;
+}
+
+.poll-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-active {
+    background: #2ecc71;
+    color: white;
+}
+
+.status-ended {
+    background: #e74c3c;
+    color: white;
+}
+
+.poll-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.poll-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: white;
+    border: 1px solid #E6E6FA;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.poll-option:hover {
+    background: #E6E6FA;
+    border-color: #B57EDC;
+}
+
+.poll-option input[type="radio"] {
+    margin: 0;
+}
+
+.option-text {
+    flex-grow: 1;
+}
+
+.poll-results {
+    margin-top: 15px;
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: white;
+    border-radius: 4px;
+}
+
+.result-bar {
+    height: 20px;
+    background: #6A0DAD;
+    border-radius: 10px;
+    margin-top: 5px;
+    transition: width 0.5s ease;
+}
+
+.poll-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #800080;
+    margin-top: 10px;
+}
+
+.poll-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.vote-btn, .delete-poll-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.vote-btn {
+    background: #800080;
+    color: white;
+}
+
+.vote-btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+.delete-poll-btn {
+    background: #e74c3c;
+    color: white;
+}
+
+.vote-count {
+    font-size: 0.9rem;
+    color: #6A0DAD;
+    font-weight: 600;
+}
+
+.already-voted {
+    color: #2ecc71;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.no-polls {
+    text-align: center;
+    padding: 40px;
+    color: #800080;
+    font-style: italic;
+}
 
 /* Gallery specific styles */
 .gallery-container {
@@ -699,34 +923,6 @@ session_start();
     gap: 8px; /* Add gap between buttons */
 }
 
-/* Editable title styles */
-.editable-title {
-    position: relative;
-    margin-bottom: 8px;
-}
-
-.title-text {
-    cursor: pointer;
-    font-weight: 500;
-    color: #6A0DAD; /* Royal Purple */
-    word-break: break-word;
-    padding: 2px 5px;
-    border: 1px dashed transparent;
-}
-
-.title-text:hover {
-    border-color: #6A0DAD; /* Royal Purple */
-    background-color: #F5F0FA; /* Very Pale Purple */
-}
-
-.title-edit {
-    width: 100%;
-    padding: 2px 5px;
-    font-size: 1rem;
-    border: 1px solid #6A0DAD; /* Royal Purple */
-    border-radius: 3px;
-}
-/*##############*/
   /* Responsive */
   @media (max-width: 320px) {
     .tab-buttons button {
@@ -881,6 +1077,19 @@ session_start();
     .gallery-container {
         grid-template-columns: 1fr; /* Still 1 column on mobile */
     }
+    #directory-table {
+        font-size: 0.8rem;
+    }
+    
+    #directory-table th,
+    #directory-table td {
+        padding: 6px 4px;
+    }
+    
+    .status-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
   }
  @media (max-width: 1024px) {
       .gallery-container {
@@ -952,14 +1161,33 @@ session_start();
         <label for="signin-email">Email Address</label>
         <input type="email" id="signin-email" name="email" required autocomplete="email" placeholder="Enter your email address">
 
+        <label for="signin-phone">Phone Number (Optional)</label>
+        <input type="text" id="signin-phone" name="phone_no" placeholder="Enter your phone number">
+
         <label for="signin-building">Building Number</label>
         <input type="text" id="signin-building" name="building" required pattern="[A-Z]-[0-9]{1,3}" placeholder="Format: Letter-Number (e.g., C-00)">
         
         <label for="signin-room">Room Number</label>
         <input type="text" id="signin-room" name="room" required pattern="[0-9]{1,2}/[0-9]{1,3}" placeholder="Format: Floor/Room (e.g., 0/00)">
 
+        <label for="signin-member-type">Member Type</label>
+        <select id="signin-member-type" name="member_type" required>
+            <option value="owner">Owner</option>
+            <option value="landlord">Landlord</option>
+        </select>
+
+        <label for="signin-status">Status</label>
+        <select id="signin-status" name="status" required>
+            <option value="Active">Active</option>
+            <option value="Vacant">Vacant</option>
+        </select>
+        
+        <label for="signin-members">Number of Members</label>
+        <input type="number" id="signin-members" name="no_of_members" value="1" min="1" required>
+        
         <label for="signin-password">Password</label>
         <input type="password" id="signin-password" name="password" required autocomplete="new-password" placeholder="Create a strong password">
+        <small style="color: #FF0000;">Password cannot be changed</small>
 
         <label for="signin-role">Role</label>
         <select id="signin-role" name="role" required>
@@ -983,7 +1211,7 @@ session_start();
   ############# -->
   <div id="home" class="tab">
     <button class="logout-btn" onclick="logout()">Logout</button>
-    
+    <br>
     <div class="welcome-section">
         <h2>Welcome to SocietySphere</h2>
         <p>Connecting Residents, Strengthening Community.</p>
@@ -1008,7 +1236,7 @@ session_start();
 
   <div id="about" class="tab">
     <button class="logout-btn" onclick="logout()">Logout</button>
-    
+    <br>
     <div class="about-container">
         <div class="about-header">
             <h2>About SocietySphere Portal</h2>
@@ -1095,6 +1323,57 @@ session_start();
     </div>
 </div>
 
+<!-- Directory Tab -->
+<div id="directory" class="tab">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <h3>Resident's Directory</h3>
+    
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="success-msg"><?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div>
+    <?php endif; ?>
+    
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="error-msg"><?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div>
+    <?php endif; ?>
+    
+    <div class="directory-info" style="margin-bottom: 20px; padding: 15px; background: #F5F0FA; border-radius: 8px;">
+        <p><strong>Note:</strong> 
+            <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'resident'): ?>
+                Phone numbers and email addresses are masked for privacy. Committee members can view complete contact information.
+            <?php else: ?>
+                Complete contact information is available for committee members.
+            <?php endif; ?>
+        </p>
+    </div>
+    
+    <div class="table-responsive">
+        <table id="directory-table" aria-label="Resident's Directory">
+            <thead>
+                <tr>
+                    <th>Building</th>
+                    <th>Floor</th>
+                    <th>Room</th>
+                    <th>Name</th>
+                    <th>Phone No.</th>
+                    <th>Email</th>
+                    <th>Member Type</th>
+                    <th>No. of Members</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="directory-table-body">
+                <!-- Directory data will be loaded here dynamically -->
+                <tr>
+                    <td colspan="9" style="text-align: center;">Click on Directory tab to load data</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="directory-message" class="error-msg" aria-live="polite"></div>
+</div>
+</div>
+
   <div id="notices" class="tab">
     <button class="logout-btn" onclick="logout()">Logout</button>
     <h3>Society Notices</h3>
@@ -1105,6 +1384,15 @@ session_start();
     </div>
 </div>
 
+<!-- Resident Poll Tab -->
+<div id="polls" class="tab">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <h3>Current Polls</h3>
+    <div id="polls-container" class="polls-container">
+        <!-- Polls will be loaded here dynamically -->
+    </div>
+</div>    
+    
 <div id="gallery" class="tab">
   <button class="logout-btn" onclick="logout()">Logout</button>
   <h3>Gallery</h3>
@@ -1217,6 +1505,32 @@ session_start();
     </div>
 </div>
 
+<!-- Committee Poll Tab -->
+<div id="committee-polls" class="tab">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    
+    <h3>Create New Poll</h3>
+    <form id="create-poll-form" method="POST" action="code.php">
+        <input type="hidden" name="action" value="create_poll">
+        
+        <label for="poll-title">Poll Title</label>
+        <input type="text" id="poll-title" name="title" required placeholder="Enter poll question">
+        
+        <label for="poll-options">Options (one per line)</label>
+        <textarea id="poll-options" name="options" rows="5" required placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+        
+        <label for="poll-end-time">End Date & Time</label>
+        <input type="datetime-local" id="poll-end-time" name="end_time" required>
+        
+        <button type="submit" class="submit-btn">Create Poll</button>
+    </form>
+    
+    <h4>Manage Polls</h4>
+    <div id="committee-polls-container" class="polls-container">
+        <!-- Committee polls management will be loaded here -->
+    </div>
+</div>
+    
 <div id="committee-gallery" class="tab">
   <button class="logout-btn" onclick="logout()">Logout</button>
   <h3>Upload Photo</h3>
@@ -1357,14 +1671,20 @@ session_start();
             loadMaintenanceData();
         } else if (tabId === 'committee-maintenance' && currentUser.role === 'committee') {
             loadCommitteeMaintenanceInterface();
+        } else if (tabId === 'directory') {
+            loadDirectoryData();
         } else if (tabId === 'notices' && currentUser.role === 'resident') {
             loadNoticesForResident();
+        } else if (tabId === 'polls' && currentUser.role === 'resident') {
+            loadPolls(false);
         } else if (tabId === 'gallery' && currentUser.role === 'resident') {
             loadGalleryPhotos(false);
         } else if (tabId === 'complaints' && currentUser.role === 'resident') {
             loadResidentComplaints();
         } else if (tabId === 'committee-notices' && currentUser.role === 'committee') {
             loadNoticesForCommittee();
+        } else if (tabId === 'committee-polls' && currentUser.role === 'committee') {
+            loadPolls(true);
         } else if (tabId === 'committee-gallery' && currentUser.role === 'committee') {
             loadGalleryPhotos(true);
         } else if (tabId === 'committee-complaints' && currentUser.role === 'committee') {
@@ -1415,13 +1735,13 @@ showTab('home'); // Same home tab for all roles
 // Email validation
 const emailField = document.getElementById('signin-email');
 const emailError = document.getElementById('email-error');
-const emailPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+//const emailPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         
 emailField.addEventListener('blur', function() {
 const email = emailField.value;
-//const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            
+    
 if (email && !emailPattern.test(email)) {
     emailError.style.display = 'block';
     emailField.style.borderColor = '#e74c3c';
@@ -1434,7 +1754,6 @@ if (email && !emailPattern.test(email)) {
 // Form validation before submission
 document.getElementById('signin-form').addEventListener('submit', function(event) {
     const email = emailField.value;
-    //const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             
     if (!emailPattern.test(email)) {
         event.preventDefault();
@@ -1447,7 +1766,7 @@ document.getElementById('signin-form').addEventListener('submit', function(event
 // Add validation for building and room format
 document.getElementById('signin-building').addEventListener('blur', function() {
     const building = this.value;
-    const pattern = /^[A-Z]-[0-9]{2}$/;
+    const pattern = /^C-(5[0-4]|49)$/;
     
     if (building && !pattern.test(building)) {
         this.style.borderColor = '#e74c3c';
@@ -1459,7 +1778,7 @@ document.getElementById('signin-building').addEventListener('blur', function() {
 
 document.getElementById('signin-room').addEventListener('blur', function() {
     const room = this.value;
-    const pattern = /^[0-9]{1,2}\/[0-9]{2}$/;
+    const pattern = /^[0-3]\/[0-1][0-6]$/;
     
     if (room && !pattern.test(room)) {
         this.style.borderColor = '#e74c3c';
@@ -1473,8 +1792,8 @@ document.getElementById('signin-room').addEventListener('blur', function() {
 document.getElementById('signin-form').addEventListener('submit', function(event) {
     const building = document.getElementById('signin-building').value;
     const room = document.getElementById('signin-room').value;
-    const buildingPattern = /^[A-Z]-[0-9]{2}$/;
-    const roomPattern = /^[0-9]{1,2}\/[0-9]{2}$/;
+    const buildingPattern = /^C-(5[0-4]|49)$/;
+    const roomPattern = /^[0-3]\/[0-1][0-6]$/;
     
     if (!buildingPattern.test(building)) {
         event.preventDefault();
@@ -1491,7 +1810,7 @@ document.getElementById('signin-form').addEventListener('submit', function(event
     }
 });
 
-// Modify your logout function
+// logout function
 function logout() {
     window.location.href = 'code.php?action=logout';
 }
@@ -1502,7 +1821,9 @@ function logout() {
   const tabsForResident = [
     { id: 'home', label: 'Home' },
     { id: 'about', label: 'About Us' },
+    { id: 'directory', label: 'Directory' },
     { id: 'notices', label: 'Notices' },
+    { id: 'polls', label: 'Polls' },
     { id: 'gallery', label: 'Gallery' },
     { id: 'complaints', label: 'Complaints' },
     { id: 'maintenance', label: 'Maintenance' }
@@ -1511,17 +1832,13 @@ function logout() {
 const tabsForCommittee = [
     { id: 'home', label: 'Home' },
     { id: 'about', label: 'About Us' },
+    { id: 'directory', label: 'Directory' },
     { id: 'committee-notices', label: 'Notices' },
+    { id: 'committee-polls', label: 'Polls' },
     { id: 'committee-gallery', label: 'Gallery' },
     { id: 'committee-complaints', label: 'Complaints' },
     { id: 'committee-maintenance', label: 'Maintenance' }
 ];
-
-  // Data storage for notices, gallery and complaints
-  let notices = [];
-  let galleryPhotos = [];
-  let complaints = [];
-  let maintenanceChanges = [];
 
   // Renders tab buttons as per current role or guest (home, login)
   function renderTabButtons(role = 'guest') {
@@ -1529,7 +1846,7 @@ const tabsForCommittee = [
     tabButtonsDiv.innerHTML = ''; // Clear buttons
 
     if (role === 'guest') {
-      // Guest tabs: home and login
+      // Guest tabs: login
       createTabButton('login', 'LOGIN');
       showTab('login');
     } else if (role === 'resident') {
@@ -1557,30 +1874,38 @@ const tabsForCommittee = [
 
     // Add logo for Notices tab
   if (label === 'Home') {
-    logo.src = 'HomeLogo.png'; // Use the same logo as your header
+    logo.src = 'HomeLogo.png'; 
     logo.alt = 'Home Tab Logo';
   }  
   else if (label === 'About Us') {
-    logo.src = 'AboutUsLogo.png'; // Use the same logo as your header
+    logo.src = 'AboutUsLogo.png'; 
     logo.alt = 'About Us Tab Logo';
   }
+  else if (label === 'Directory') {
+    logo.src = 'DirectoryLogo.png'; 
+    logo.alt = 'Directory Tab Logo';
+  }
   else if (label === 'Notices' || tabId === 'committee-notices') {
-    logo.src = 'NoticeLogo.png'; // Use the same logo as your header
+    logo.src = 'NoticeLogo.png'; 
     logo.alt = 'Notices Tab Logo';
   }
+  else if (label === 'Polls' || tabId === 'committee-polls') {
+    logo.src = 'PollLogo.png'; 
+    logo.alt = 'Poll Tab Logo';
+  }
   else if (label === 'Gallery' || tabId === 'committee-gallery') {
-    logo.src = 'GalleryLogo.png'; // Use the same logo as your header
+    logo.src = 'GalleryLogo.png'; 
     logo.alt = 'Gallery Tab Logo';
   }
   else if (label === 'Complaints' || tabId === 'committee-complaints') {
-    logo.src = 'ComplaintLogo.png'; // Use the same logo as your header
+    logo.src = 'ComplaintLogo.png'; 
     logo.alt = 'Complaints Tab Logo';
   }
   else if (label === 'Maintenance') {
-    logo.src = 'MaintenanceLogo.png'; // Use the same logo as your header
+    logo.src = 'MaintenanceLogo.png'; 
     logo.alt = 'Maintenance Tab Logo';
   }
-    //btn.textContent = label;
+    
     btn.appendChild(logo);
     btn.appendChild(labelSpan);
     btn.onclick = () => showTab(tabId);
@@ -1588,7 +1913,7 @@ const tabsForCommittee = [
   }
 
 //###########---HOME_START---###################
-// Enhanced load latest activities function
+// Load latest activities 
 async function loadLatestActivities() {
     const container = document.getElementById('latest-activities-container');
     container.innerHTML = '<div class="activities-loading">Loading latest activities...</div>';
@@ -1673,6 +1998,86 @@ async function loadCommitteeQuickStats() {
 }
 //##########---HOME_END---####################### 
 
+//##########---DIRECTORY_START---############
+// Load directory data
+async function loadDirectoryData() {
+    const tableBody = document.getElementById('directory-table-body');
+    const messageDiv = document.getElementById('directory-message');
+    
+    tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Loading directory data...</td></tr>';
+    messageDiv.textContent = '';
+    
+    try {
+        const response = await fetch('code.php?action=get_directory_data');
+        
+        // Check if response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const directoryData = await response.json();
+        
+        // Check if we got an error from the server
+        if (directoryData.error) {
+            messageDiv.textContent = directoryData.error;
+            tableBody.innerHTML = '';
+            return;
+        }
+        
+        // Check if data is empty
+        if (!directoryData || directoryData.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No residents found in directory.</td></tr>';
+            return;
+        }
+        
+        renderDirectoryTable(directoryData);
+    } catch (error) {
+        console.error('Error loading directory data:', error);
+        tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Error loading directory data. Please try again.</td></tr>';
+        messageDiv.textContent = 'Error loading directory data: ' + error.message;
+    }
+}
+
+// Render directory table - FIXED VERSION
+function renderDirectoryTable(directoryData) {
+    const tableBody = document.getElementById('directory-table-body');
+    
+    let html = '';
+    
+    directoryData.forEach(entry => {
+        // Use the building and room fields directly since backend already processes them
+        const building = entry.building || '';
+        const room = entry.room || '';
+        
+        html += `
+            <tr>
+                <td>${escapeHtml(building)}</td>
+                <td>${escapeHtml(entry.floor_no || '')}</td>
+                <td>${escapeHtml(entry.room_no || '')}</td>
+                <td>${escapeHtml(entry.name || '')}</td>
+                <td>${escapeHtml(entry.phone_no || 'Not provided')}</td>
+                <td>${escapeHtml(entry.email || 'Not provided')}</td>
+                <td>${escapeHtml(entry.member_type || '')}</td>
+                <td>${entry.no_of_members || 1}</td>
+                <td>
+                    <span class="status-badge ${entry.status === 'Active' ? 'status-active' : 'status-vacant'}">
+                        ${entry.status || 'Unknown'}
+                    </span>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tableBody.innerHTML = html;
+}
+// Helper function to escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+//#############---DIRECTORY_END---##############
 
 //##########---NOTICE_START---#####################
 // Render notices
@@ -1779,6 +2184,182 @@ function deleteNotice(noticeId) {
 
 //##########---NOTICE_END---#################
 
+//##########---POLL_START---###############
+// Load polls based on user role
+async function loadPolls(isCommittee = false) {
+    const container = document.getElementById(isCommittee ? 'committee-polls-container' : 'polls-container');
+    container.innerHTML = '<p>Loading polls...</p>';
+    
+    try {
+        const response = await fetch('code.php?action=get_polls');
+        const polls = await response.json();
+        
+        if (polls.length === 0) {
+            container.innerHTML = '<div class="no-polls">No active polls available.</div>';
+            return;
+        }
+        
+        renderPolls(polls, container, isCommittee);
+    } catch (error) {
+        container.innerHTML = '<p class="error-msg">Error loading polls</p>';
+    }
+}
+
+// Render polls in the container
+function renderPolls(polls, container, isCommittee) {
+    let html = '';
+    
+    polls.forEach(poll => {
+        const isEnded = new Date(poll.end_time) < new Date();
+        const hasVoted = poll.user_voted;
+        
+        html += `
+            <div class="poll-card" data-poll-id="${poll.id}">
+                <div class="poll-header">
+                    <h4 class="poll-title">${poll.title}</h4>
+                    <span class="poll-status ${isEnded ? 'status-ended' : 'status-active'}">
+                        ${isEnded ? 'Ended' : 'Active'}
+                    </span>
+                </div>
+                
+                ${!isEnded && !hasVoted ? `
+                    <div class="poll-options">
+                        ${poll.options.map(option => `
+                            <label class="poll-option">
+                                <input type="radio" name="poll_${poll.id}" value="${option.id}">
+                                <span class="option-text">${option.option_text || option.text}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <button class="vote-btn" onclick="voteOnPoll(${poll.id})" ${hasVoted ? 'disabled' : ''}>
+                        ${hasVoted ? 'Already Voted' : 'Vote'}
+                    </button>
+                ` : ''}
+                
+                ${(isEnded || hasVoted) ? `
+                    <div class="poll-results">
+                        <h5>Results:</h5>
+                        ${poll.options.map(option => {
+                            const percentage = poll.total_votes > 0 ? 
+                                Math.round((option.votes / poll.total_votes) * 100) : 0;
+                            return `
+                                <div class="result-item">
+                                    <span>${option.option_text || option.text}</span>
+                                    <span>${option.votes} votes (${percentage}%)</span>
+                                </div>
+                                <div class="result-bar" style="width: ${percentage}%"></div>
+                            `;
+                        }).join('')}
+                        <div class="poll-meta">
+                            <span>Total votes: ${poll.total_votes}</span>
+                            <span>Ends: ${new Date(poll.end_time).toLocaleString()}</span>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${isCommittee ? `
+                    <div class="poll-actions">
+                        <button class="delete-poll-btn" onclick="deletePoll(${poll.id})">
+                            Delete Poll
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Vote on a poll
+async function voteOnPoll(pollId) {
+    const selectedOption = document.querySelector(`input[name="poll_${pollId}"]:checked`);
+    
+    if (!selectedOption) {
+        alert('Please select an option to vote.');
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'vote_poll');
+        formData.append('poll_id', pollId);
+        formData.append('option_id', selectedOption.value);
+        
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Vote submitted successfully!');
+            loadPolls(currentUser.role === 'committee'); // Reload polls
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error submitting vote');
+    }
+}
+
+// Delete poll (committee only)
+async function deletePoll(pollId) {
+    if (!confirm('Are you sure you want to delete this poll? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'delete_poll');
+        formData.append('poll_id', pollId);
+        
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Poll deleted successfully!');
+            loadPolls(true); // Reload committee polls
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error deleting poll');
+    }
+}
+
+// Handle poll creation form
+document.getElementById('create-poll-form')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Poll created successfully!');
+            this.reset();
+            loadPolls(true); // Reload committee polls
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error creating poll');
+    }
+});
+//##########---POLL_END---##############
+    
 //##########---GALLERY_START---##############
 // Load gallery photos
 async function loadGalleryPhotos(isCommittee = false) {
@@ -1789,86 +2370,8 @@ async function loadGalleryPhotos(isCommittee = false) {
         const response = await fetch('code.php?action=get_gallery_photos');
         container.innerHTML = await response.text();
         
-        // Add event listeners for editable titles if committee
-        if (isCommittee) {
-            setupEditableTitles();
-        }
     } catch (error) {
         container.innerHTML = '<p class="error-msg">Error loading photos</p>';
-    }
-}
-
-// Setup editable titles for committee
-function setupEditableTitles() {
-    const editableTitles = document.querySelectorAll('.editable-title');
-    
-    editableTitles.forEach(container => {
-        const textSpan = container.querySelector('.title-text');
-        const editInput = container.querySelector('.title-edit');
-        
-        textSpan.addEventListener('click', () => {
-            textSpan.style.display = 'none';
-            editInput.style.display = 'block';
-            editInput.focus();
-        });
-        
-        editInput.addEventListener('blur', () => {
-            saveTitleChange(container);
-        });
-        
-        editInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                saveTitleChange(container);
-            } else if (e.key === 'Escape') {
-                editInput.value = textSpan.textContent;
-                editInput.style.display = 'none';
-                textSpan.style.display = 'inline';
-            }
-        });
-    });
-}
-
-// Save title change
-async function saveTitleChange(container) {
-    const textSpan = container.querySelector('.title-text');
-    const editInput = container.querySelector('.title-edit');
-    const photoId = container.dataset.id;
-    const newTitle = editInput.value.trim();
-    
-    if (newTitle === textSpan.textContent || newTitle === '') {
-        editInput.style.display = 'none';
-        textSpan.style.display = 'inline';
-        return;
-    }
-    
-    try {
-        const formData = new FormData();
-        formData.append('action', 'update_photo_title');
-        formData.append('id', photoId);
-        formData.append('title', newTitle);
-        
-        const response = await fetch('code.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            textSpan.textContent = newTitle;
-            editInput.style.display = 'none';
-            textSpan.style.display = 'inline';
-        } else {
-            alert('Error: ' + result.message);
-            editInput.value = textSpan.textContent;
-            editInput.style.display = 'none';
-            textSpan.style.display = 'inline';
-        }
-    } catch (error) {
-        alert('Error updating title');
-        editInput.value = textSpan.textContent;
-        editInput.style.display = 'none';
-        textSpan.style.display = 'inline';
     }
 }
 

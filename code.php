@@ -15,7 +15,6 @@ function getDBConnection() {
     }
     return $conn;
 }
-
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -24,8 +23,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         handleLogin();
     } elseif ($action === 'signup') {
         handleSignup();
+    } elseif ($action === 'loadDirectory') {
+        getDirectoryData();
     } elseif ($action === 'upload_notice') {
         handleNoticeUpload();
+    } elseif ($action === 'create_poll') {
+        handleCreatePoll();
+    } elseif ($action === 'vote_poll') {
+        handleVotePoll();
+    } elseif ($action === 'delete_poll') {
+        handleDeletePoll();
     } elseif ($action === 'upload_photo') {
         handlePhotoUpload();
     } elseif ($action === 'submit_complaint') {  
@@ -95,6 +102,10 @@ function handleSignup() {
     $password = $_POST['password'] ?? '';
     $role = $_POST['role'] ?? '';
     $email = $_POST['email'] ?? '';
+    $phone_no = $_POST['phone_no'] ?? '';
+    $member_type = $_POST['member_type'] ?? 'owner';
+    $no_of_members = $_POST['no_of_members'] ?? 1;
+    $status = $_POST['status'] ?? 'Active';
     
     // Individual field validation with specific error messages
     if (empty($name)) {
@@ -151,6 +162,24 @@ function handleSignup() {
         exit();
     }
     
+    // Validate phone number format (if provided)
+    if (!empty($phone_no) && !preg_match('/^[0-9+\-\s()]{10,15}$/', $phone_no)) {
+        header("Location: website.php?tab=create-account&error=Please enter a valid phone number");
+        exit();
+    }
+    
+    // Validate number of members
+    if (!empty($no_of_members) && (!is_numeric($no_of_members) || $no_of_members < 1 || $no_of_members > 20)) {
+        header("Location: website.php?tab=create-account&error=Number of members must be between 1 and 20");
+        exit();
+    }
+    
+    // Validate status
+    if (!in_array($status, ['Active', 'Vacant'])) {
+        header("Location: website.php?tab=create-account&error=Invalid status selected");
+        exit();
+    }
+    
     // Generate user ID from building, room, and role
     $user_id = generateUserId($building, $room, $role);
     
@@ -180,15 +209,18 @@ function handleSignup() {
         
         if ($resident_result->num_rows === 0) {
             // Create resident account
-            $resident_stmt = $conn->prepare("INSERT INTO users (name, user_id, password, hashed_password, email, role, building, room) VALUES (?, ?, ?, ?, ?, 'resident', ?, ?)");
-            $resident_stmt->bind_param("sssssss", $name, $resident_user_id, $password, $hashed_password, $email, $building, $room);
-            $resident_stmt->execute();
+            $resident_stmt = $conn->prepare("INSERT INTO users (name, user_id, password, hashed_password, email, phone_no, member_type, no_of_members, status, role, building, room) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'resident', ?, ?)");
+            $resident_stmt->bind_param("sssssssiss", $name, $resident_user_id, $password, $hashed_password, $email, $phone_no, $member_type, $no_of_members, $status, $building, $room);
+            if (!$resident_stmt->execute()) {
+                header("Location: website.php?tab=create-account&error=Error creating resident account: " . $conn->error);
+                exit();
+            }
         }
     }
     
     // Insert new user
-    $stmt = $conn->prepare("INSERT INTO users (name, user_id, password, hashed_password, email, role, building, room) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssss", $name, $user_id, $password, $hashed_password, $email, $role, $building, $room);
+    $stmt = $conn->prepare("INSERT INTO users (name, user_id, password, hashed_password, email, phone_no, member_type, no_of_members, status, role, building, room) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssissss", $name, $user_id, $password, $hashed_password, $email, $phone_no, $member_type, $no_of_members, $status, $role, $building, $room);
     
     if ($stmt->execute()) {
         $success_message = "Account created successfully. Please login. Your User ID is: " . $user_id;
@@ -255,7 +287,7 @@ function getLatestActivities() {
             'message' => "New notice '" . $row['title'] . "' has been uploaded by " . $row['uploaded_by_name']
         ];
     }
-    
+
     // Get latest gallery photos (last 5)
     $galleryQuery = "SELECT g.title, g.created_at, u.name as uploaded_by_name 
                     FROM gallery g 
@@ -406,7 +438,15 @@ function getLatestActivities() {
     usort($activities, function($a, $b) {
         return strtotime($b['timestamp']) - strtotime($a['timestamp']);
     });
+
+    // Add this line before the return statement:
+    $activities = addPollActivities($activities);
     
+    // Sort all activities by timestamp (newest first) and get latest 15
+    usort($activities, function($a, $b) {
+        return strtotime($b['timestamp']) - strtotime($a['timestamp']);
+    });
+        
     return array_slice($activities, 0, 15);
 }
 
@@ -444,6 +484,8 @@ function getActivityIcon($type) {
     switch ($type) {
         case 'notice':
             return '📄';
+        case 'poll':
+            return '📊';
         case 'photo':
             return '🖼️';
         case 'new_complaint':
@@ -489,6 +531,11 @@ function getQuickStats($userRole, $userId) {
         $stats['new_notices'] = $result->fetch_assoc()['count'];
         
     } else if ($userRole === 'committee') {
+        // Active polls count
+        $activePollsQuery = "SELECT COUNT(*) as count FROM polls WHERE end_time > NOW()";
+        $result = $conn->query($activePollsQuery);
+        $stats['active_polls'] = $result->fetch_assoc()['count'];
+
         // Committee stats - total complaints
         $totalComplaintsQuery = "SELECT COUNT(*) as count FROM complaints";
         $result = $conn->query($totalComplaintsQuery);
@@ -569,6 +616,233 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_quick_stats') {
     exit();
 }
 //#############---HOME_END---#################3333
+
+//############---DIRECTORY_START---##############
+// Get directory data from users table
+/*
+function getDirectoryData() {
+    if (!isset($_SESSION['user'])) {
+        echo json_encode(['error' => 'Unauthorized access']);
+        exit();
+    }
+
+    $conn = getDBConnection();
+    $directory = [];
+    
+    $query = "SELECT user_id, name, email, phone_no, member_type, no_of_members, status, building, room
+              FROM users 
+              WHERE role = 'resident' 
+              ORDER BY building, room";
+    
+    $result = $conn->query($query);
+    
+    while ($row = $result->fetch_assoc()) {
+        // Extract building, floor, and room from the existing fields
+        $building_parts = explode('-', $row['building']);
+        $room_parts = explode('/', $row['room']);
+        
+        $row['building_no'] = $building_parts[1] ?? '';
+        $row['building_letter'] = $building_parts[0] ?? 'C';
+        $row['floor_no'] = $room_parts[0] ?? '';
+        $row['room_no'] = $room_parts[1] ?? '';
+        
+        // Mask sensitive data for residents
+        if ($_SESSION['user']['role'] === 'resident') {
+            $row['email'] = maskEmail($row['email']);
+            $row['phone_no'] = maskPhone($row['phone_no']);
+        }
+        
+        $directory[] = $row;
+    }
+    
+    return $directory;
+}
+// Helper function to mask email
+function maskEmail($email) {
+    if (empty($email)) return 'Not provided';
+    
+    $parts = explode('@', $email);
+    if (count($parts) !== 2) return $email;
+    
+    $username = $parts[0];
+    $domain = $parts[1];
+    
+    if (strlen($username) <= 2) {
+        $maskedUsername = substr($username, 0, 1) . '***';
+    } else {
+        $maskedUsername = substr($username, 0, 2) . '***' . substr($username, -1);
+    }
+    
+    return $maskedUsername . '@' . $domain;
+}
+
+// Helper function to mask phone number
+function maskPhone($phone) {
+    if (empty($phone)) return 'Not provided';
+    
+    if (strlen($phone) <= 4) {
+        return '***' . substr($phone, -1);
+    } else {
+        return '***' . substr($phone, -4);
+    }
+}
+
+// AJAX endpoint to get directory data
+if (isset($_GET['action']) && $_GET['action'] === 'get_directory_data') {
+    $directoryData = getDirectoryData();
+    header('Content-Type: application/json');
+    echo json_encode($directoryData);
+    exit();
+}
+*/
+
+function getDirectoryData() {
+    // Add error logging
+    error_log("getDirectoryData called");
+    
+    if (!isset($_SESSION['user'])) {
+        error_log("Session user not set");
+        return ['error' => 'Unauthorized access - Session not found'];
+    }
+
+    try {
+        $conn = getDBConnection();
+        
+        if (!$conn) {
+            error_log("Database connection failed");
+            return ['error' => 'Database connection failed'];
+        }
+        
+        $directory = [];
+        
+        $query = "SELECT user_id, name, email, phone_no, member_type, no_of_members, status, building, room
+                  FROM users 
+                  WHERE role = 'resident' 
+                  ORDER BY building, room";
+        
+        $result = $conn->query($query);
+        
+        if (!$result) {
+            error_log("Query failed: " . $conn->error);
+            return ['error' => 'Database query failed: ' . $conn->error];
+        }
+        
+        error_log("Query executed, rows: " . $result->num_rows);
+        
+        while ($row = $result->fetch_assoc()) {
+            // Extract building, floor, and room from the existing fields
+            $building_parts = explode('-', $row['building']);
+            $room_parts = explode('/', $row['room']);
+            
+            $row['building_no'] = isset($building_parts[1]) ? $building_parts[1] : '';
+            $row['building_letter'] = isset($building_parts[0]) ? $building_parts[0] : 'C';
+            $row['floor_no'] = isset($room_parts[0]) ? $room_parts[0] : '';
+            $row['room_no'] = isset($room_parts[1]) ? $room_parts[1] : '';
+            
+            // Mask sensitive data for residents
+            if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'resident') {
+                $row['email'] = maskEmail($row['email']);
+                $row['phone_no'] = maskPhone($row['phone_no']);
+            }
+            
+            $directory[] = $row;
+        }
+        
+        $conn->close();
+        error_log("Returning " . count($directory) . " directory entries");
+        return $directory;
+        
+    } catch (Exception $e) {
+        error_log("Exception in getDirectoryData: " . $e->getMessage());
+        return ['error' => 'Error: ' . $e->getMessage()];
+    }
+}
+
+// Helper function to mask email
+function maskEmail($email) {
+    if (empty($email)) return 'Not provided';
+    
+    $parts = explode('@', $email);
+    if (count($parts) !== 2) return $email;
+    
+    $username = $parts[0];
+    $domain = $parts[1];
+    
+    if (strlen($username) <= 2) {
+        $maskedUsername = substr($username, 0, 1) . '***';
+    } else {
+        $maskedUsername = substr($username, 0, 2) . '***' . substr($username, -1);
+    }
+    
+    return $maskedUsername . '@' . $domain;
+}
+
+// Helper function to mask phone number
+function maskPhone($phone) {
+    if (empty($phone)) return 'Not provided';
+    
+    if (strlen($phone) <= 4) {
+        return '***' . substr($phone, -1);
+    } else {
+        return '***' . substr($phone, -4);
+    }
+}
+
+// AJAX endpoint to get directory data
+if (isset($_GET['action']) && $_GET['action'] === 'get_directory_data') {
+    error_log("Directory data endpoint called");
+    error_log("Session user: " . (isset($_SESSION['user']) ? "SET" : "NOT SET"));
+    
+    header('Content-Type: application/json');
+    header('Cache-Control: no-cache, must-revalidate');
+    
+    $directoryData = getDirectoryData();
+    echo json_encode($directoryData);
+    exit();
+}
+
+// Temporary debug endpoint for directory
+if (isset($_GET['action']) && $_GET['action'] === 'debug_directory') {
+    header('Content-Type: application/json');
+    
+    // Start session if not started
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    $debug_info = [
+        'session_set' => isset($_SESSION['user']),
+        'session_user' => $_SESSION['user'] ?? null,
+        'database_connected' => false,
+        'table_exists' => false,
+        'resident_count' => 0
+    ];
+    
+    try {
+        $conn = getDBConnection();
+        if ($conn) {
+            $debug_info['database_connected'] = true;
+            
+            // Check if users table exists
+            $table_check = $conn->query("SHOW TABLES LIKE 'users'");
+            $debug_info['table_exists'] = ($table_check->num_rows > 0);
+            
+            // Count residents
+            $count_result = $conn->query("SELECT COUNT(*) as count FROM users WHERE role = 'resident'");
+            if ($count_result) {
+                $debug_info['resident_count'] = $count_result->fetch_assoc()['count'];
+            }
+            
+            $conn->close();
+        }
+    } catch (Exception $e) {
+        $debug_info['error'] = $e->getMessage();
+    }
+    
+    echo json_encode($debug_info);
+    exit();
+}
+//##############---DIRECTORY_END---###############
 
 //#############---NOTICE_START---############
 // Handle notice upload
@@ -780,6 +1054,292 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_notice' && isset($_GET
     exit();
 }
 //###########---NOTICE_END---##############
+
+//###########---POLLS_START---##############
+
+// Handle poll creation
+function handleCreatePoll() {
+    // Validate user role
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
+        $_SESSION['error'] = "Unauthorized access";
+        header("Location: website.php?tab=login");
+        exit();
+    }
+
+    $title = $_POST['title'] ?? '';
+    $options_text = $_POST['options'] ?? '';
+    $end_time = $_POST['end_time'] ?? '';
+
+    if (empty($title) || empty($options_text) || empty($end_time)) {
+        $_SESSION['error'] = "All fields are required";
+        header("Location: website.php?tab=committee-polls");
+        exit();
+    }
+
+    // Validate end time is in the future
+    if (strtotime($end_time) <= time()) {
+        $_SESSION['error'] = "End time must be in the future";
+        header("Location: website.php?tab=committee-polls");
+        exit();
+    }
+
+    // Parse options (one per line)
+    $options = array_filter(array_map('trim', explode("\n", $options_text)));
+    if (count($options) < 2) {
+        $_SESSION['error'] = "At least 2 options are required";
+        header("Location: website.php?tab=committee-polls");
+        exit();
+    }
+
+    $conn = getDBConnection();
+    
+    // Start transaction
+    $conn->begin_transaction();
+
+    try {
+        // Insert poll
+        $stmt = $conn->prepare("INSERT INTO polls (title, created_by, end_time) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $title, $_SESSION['user']['user_id'], $end_time);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Error creating poll: " . $stmt->error);
+        }
+        
+        $poll_id = $stmt->insert_id;
+        
+        // Insert options
+        $option_stmt = $conn->prepare("INSERT INTO poll_options (poll_id, option_text) VALUES (?, ?)");
+        foreach ($options as $option) {
+            if (!empty(trim($option))) {
+                $option_stmt->bind_param("is", $poll_id, $option);
+                if (!$option_stmt->execute()) {
+                    throw new Exception("Error creating poll option: " . $option_stmt->error);
+                }
+            }
+        }
+        
+        $conn->commit();
+        $_SESSION['success'] = "Poll created successfully!";
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        $_SESSION['error'] = $e->getMessage();
+    }
+    
+    header("Location: website.php?tab=committee-polls");
+    exit();
+}
+
+// Handle poll voting
+function handleVotePoll() {
+    if (!isset($_SESSION['user'])) {
+        echo json_encode(['success' => false, 'message' => 'Please login to vote']);
+        exit();
+    }
+
+    $poll_id = $_POST['poll_id'] ?? '';
+    $option_id = $_POST['option_id'] ?? '';
+    $user_id = $_SESSION['user']['user_id'];
+
+    if (empty($poll_id) || empty($option_id)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid vote data']);
+        exit();
+    }
+
+    $conn = getDBConnection();
+
+    try {
+        // Check if poll exists and is still active
+        $poll_check = $conn->prepare("SELECT end_time FROM polls WHERE id = ?");
+        $poll_check->bind_param("i", $poll_id);
+        $poll_check->execute();
+        $poll_result = $poll_check->get_result();
+        
+        if ($poll_result->num_rows === 0) {
+            throw new Exception("Poll not found");
+        }
+        
+        $poll = $poll_result->fetch_assoc();
+        if (strtotime($poll['end_time']) <= time()) {
+            throw new Exception("This poll has ended");
+        }
+
+        // Check if user already voted
+        $vote_check = $conn->prepare("SELECT id FROM poll_votes WHERE poll_id = ? AND user_id = ?");
+        $vote_check->bind_param("is", $poll_id, $user_id);
+        $vote_check->execute();
+        
+        if ($vote_check->get_result()->num_rows > 0) {
+            throw new Exception("You have already voted in this poll");
+        }
+
+        // Check if option belongs to poll
+        $option_check = $conn->prepare("SELECT id FROM poll_options WHERE id = ? AND poll_id = ?");
+        $option_check->bind_param("ii", $option_id, $poll_id);
+        $option_check->execute();
+        
+        if ($option_check->get_result()->num_rows === 0) {
+            throw new Exception("Invalid option selected");
+        }
+
+        // Start transaction
+        $conn->begin_transaction();
+
+        // Record the vote
+        $vote_stmt = $conn->prepare("INSERT INTO poll_votes (poll_id, option_id, user_id) VALUES (?, ?, ?)");
+        $vote_stmt->bind_param("iis", $poll_id, $option_id, $user_id);
+        
+        if (!$vote_stmt->execute()) {
+            throw new Exception("Error recording vote");
+        }
+
+        // Update option vote count
+        $update_stmt = $conn->prepare("UPDATE poll_options SET votes = votes + 1 WHERE id = ?");
+        $update_stmt->bind_param("i", $option_id);
+        
+        if (!$update_stmt->execute()) {
+            throw new Exception("Error updating vote count");
+        }
+
+        $conn->commit();
+        echo json_encode(['success' => true, 'message' => 'Vote submitted successfully!']);
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    
+    exit();
+}
+
+// Handle poll deletion
+function handleDeletePoll() {
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'committee') {
+        echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
+        exit();
+    }
+
+    $poll_id = $_POST['poll_id'] ?? '';
+
+    if (empty($poll_id)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid poll ID']);
+        exit();
+    }
+
+    $conn = getDBConnection();
+
+    try {
+        // Verify the poll exists and was created by the current user
+        $check_stmt = $conn->prepare("SELECT id FROM polls WHERE id = ? AND created_by = ?");
+        $check_stmt->bind_param("is", $poll_id, $_SESSION['user']['user_id']);
+        $check_stmt->execute();
+        
+        if ($check_stmt->get_result()->num_rows === 0) {
+            throw new Exception("Poll not found or you don't have permission to delete it");
+        }
+
+        // Delete poll (cascade will handle options and votes)
+        $delete_stmt = $conn->prepare("DELETE FROM polls WHERE id = ?");
+        $delete_stmt->bind_param("i", $poll_id);
+        
+        if ($delete_stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Poll deleted successfully!']);
+        } else {
+            throw new Exception("Error deleting poll: " . $delete_stmt->error);
+        }
+
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    
+    exit();
+}
+
+// Get polls for display
+function getPolls($user_id, $user_role) {
+    $conn = getDBConnection();
+    $polls = [];
+
+    $query = "SELECT p.id, p.title, p.created_by, p.end_time, p.created_at, 
+                     u.name as created_by_name
+              FROM polls p 
+              JOIN users u ON p.created_by = u.user_id 
+              ORDER BY p.created_at DESC";
+
+    $result = $conn->query($query);
+    
+    while ($poll = $result->fetch_assoc()) {
+        // Get options for this poll
+        $options_query = "SELECT id, option_text, votes FROM poll_options WHERE poll_id = ? ORDER BY id";
+        $options_stmt = $conn->prepare($options_query);
+        $options_stmt->bind_param("i", $poll['id']);
+        $options_stmt->execute();
+        $options_result = $options_stmt->get_result();
+        
+        $options = [];
+        $total_votes = 0;
+        
+        while ($option = $options_result->fetch_assoc()) {
+            $options[] = $option;
+            $total_votes += $option['votes'];
+        }
+        
+        $poll['options'] = $options;
+        $poll['total_votes'] = $total_votes;
+        
+        // Check if user has voted in this poll
+        $vote_check = $conn->prepare("SELECT id FROM poll_votes WHERE poll_id = ? AND user_id = ?");
+        $vote_check->bind_param("is", $poll['id'], $user_id);
+        $vote_check->execute();
+        $poll['user_voted'] = ($vote_check->get_result()->num_rows > 0);
+        
+        $polls[] = $poll;
+    }
+    
+    return $polls;
+}
+
+// AJAX endpoint to get polls
+if (isset($_GET['action']) && $_GET['action'] === 'get_polls') {
+    if (!isset($_SESSION['user'])) {
+        echo json_encode([]);
+        exit();
+    }
+
+    $polls = getPolls($_SESSION['user']['user_id'], $_SESSION['user']['role']);
+    header('Content-Type: application/json');
+    echo json_encode($polls);
+    exit();
+}
+
+// Add poll activities to home tab
+function addPollActivities($activities) {
+    $conn = getDBConnection();
+    $user_role = $_SESSION['user']['role'];
+    $user_id = $_SESSION['user']['user_id'];
+    
+    // Get recent poll creations
+    $pollQuery = "SELECT p.title, p.created_at, u.name as created_by_name 
+                 FROM polls p 
+                 JOIN users u ON p.created_by = u.user_id 
+                 WHERE p.created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)
+                 ORDER BY p.created_at DESC LIMIT 5";
+    
+    $pollResult = $conn->query($pollQuery);
+    while ($row = $pollResult->fetch_assoc()) {
+        $activities[] = [
+            'type' => 'poll',
+            'title' => $row['title'],
+            'created_by' => $row['created_by_name'],
+            'timestamp' => $row['created_at'],
+            'message' => "New poll '" . $row['title'] . "' created by " . $row['created_by_name']
+        ];
+    }
+    
+    return $activities;
+}
+
+//###########---POLL_END---#############
 
 //##########3---GALLERY_START---##########
 // Handle gallery photo upload

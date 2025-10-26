@@ -48,6 +48,28 @@ INSERT INTO `complaints` (`complaint_id`, `title`, `description`, `uploaded_by`,
 
 -- --------------------------------------------------------
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `directory`
+--
+
+CREATE TABLE `directory` (
+  `id` int(11) NOT NULL,
+  `user_id` varchar(50) NOT NULL,
+  `building_no` varchar(10) NOT NULL,
+  `floor_no` varchar(10) NOT NULL,
+  `room_no` varchar(10) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `phone_no` varchar(20) DEFAULT NULL,
+  `member_type` enum('owner','landlord') DEFAULT 'owner',
+  `status` enum('Active','Vacant') DEFAULT 'Active',
+  `no_of_members` int(11) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 --
 -- Table structure for table `gallery`
 --
@@ -137,6 +159,46 @@ INSERT INTO `notices` (`notice_id`, `title`, `file_name`, `file_type`, `file_con
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `polls`
+--
+CREATE TABLE `polls` (
+  `id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `created_by` varchar(50) NOT NULL,
+  `end_time` datetime NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `poll_options`
+--
+
+CREATE TABLE `poll_options` (
+  `id` int(11) NOT NULL,
+  `poll_id` int(11) NOT NULL,
+  `option_text` varchar(255) NOT NULL,
+  `votes` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `poll_votes`
+--
+
+CREATE TABLE `poll_votes` (
+  `id` int(11) NOT NULL,
+  `poll_id` int(11) NOT NULL,
+  `option_id` int(11) NOT NULL,
+  `user_id` varchar(50) NOT NULL,
+  `voted_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -168,6 +230,52 @@ INSERT INTO `users` (`user_id`, `name`, `email`, `building`, `room`, `password`,
 --
 -- Indexes for dumped tables
 --
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `polls`
+--
+ALTER TABLE `polls`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `poll_options`
+--
+ALTER TABLE `poll_options`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `poll_votes`
+--
+ALTER TABLE `poll_votes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `polls`
+--
+ALTER TABLE `polls`
+  ADD CONSTRAINT `polls_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `poll_options`
+--
+ALTER TABLE `poll_options`
+  ADD CONSTRAINT `poll_options_ibfk_1` FOREIGN KEY (`poll_id`) REFERENCES `polls` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `poll_votes`
+--
+ALTER TABLE `poll_votes`
+  ADD CONSTRAINT `poll_votes_ibfk_1` FOREIGN KEY (`poll_id`) REFERENCES `polls` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `poll_votes_ibfk_2` FOREIGN KEY (`option_id`) REFERENCES `poll_options` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `poll_votes_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+COMMIT;
 
 --
 -- Indexes for table `complaints`
@@ -176,6 +284,13 @@ ALTER TABLE `complaints`
   ADD PRIMARY KEY (`complaint_id`),
   ADD KEY `updated_by` (`updated_by`),
   ADD KEY `uploaded_by` (`uploaded_by`);
+
+--
+-- Indexes for table `directory`
+--
+ALTER TABLE `directory`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `gallery`
@@ -216,6 +331,12 @@ ALTER TABLE `complaints`
   MODIFY `complaint_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
+-- AUTO_INCREMENT for table `directory`
+--
+ALTER TABLE `directory`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `gallery`
 --
 ALTER TABLE `gallery`
@@ -243,6 +364,12 @@ ALTER TABLE `notices`
 ALTER TABLE `complaints`
   ADD CONSTRAINT `complaints_ibfk_1` FOREIGN KEY (`updated_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `complaints_ibfk_2` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `directory`
+--
+ALTER TABLE `directory`
+  ADD CONSTRAINT `directory_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `gallery`

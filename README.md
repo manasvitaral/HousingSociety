@@ -69,8 +69,8 @@ A comprehensive web-based housing society management system built with PHP, HTML
 
 ```
 society-management/
-├── code.php              # Backend PHP logic
-├── website.php           # Frontend HTML interface
+├── code.php              # Backend logic
+├── website.php           # Frontend interface
 ├── Titlelogo.png         # Application logo
 ├── HomeLogo.png          # Tab icons
 ├── AboutUsLogo.png
@@ -95,7 +95,7 @@ society-management/
 ## 🚀 How to Use
 - Clone the repository:
 ```bash
-git clone https://github.com/your-username/HoisingSociety.git
+git clone https://github.com/your-username/HousingSociety.git
 ```
 
 - Open `website.php` in your web browser

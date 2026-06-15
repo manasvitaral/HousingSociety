@@ -142,7 +142,7 @@ society-management/
 ## 🚀 How to Use
 - Clone the repository:
 ```bash
-git clone https://github.com/your-username/HousingSociety.git
+git clone https://github.com/manasvitaral/HousingSociety.git
 ```
 
 - Open `website.php` in your web browser

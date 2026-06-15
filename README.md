@@ -2,6 +2,10 @@
 
 A comprehensive web-based housing society management system built with PHP, HTML, CSS, and JavaScript that facilitates seamless communication between residents and committee members.
 
+## 🌟 Live Demo
+
+https://societysphere.infinityfreeapp.com
+
 ## 🌟 Features
 
 ### 👥 Multi-Role System
